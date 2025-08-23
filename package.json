@@ -11,6 +11,7 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@specy/liquid-glass-react": "^1.0.2",
+    "animated-backgrounds": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.1.0",

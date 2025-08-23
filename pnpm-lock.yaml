@@ -14,6 +14,9 @@ importers:
       '@specy/liquid-glass-react':
         specifier: ^1.0.2
         version: 1.0.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      animated-backgrounds:
+        specifier: ^2.0.0
+        version: 2.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -974,6 +977,10 @@ packages:
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
+
+  animated-backgrounds@2.0.0:
+    resolution: {integrity: sha512-17Nfey+2FxVw+xcWjqxpaoaHBJRHNYopknEOOJ6b44hf7MZ6rcfJRUNMJ10X/pJnmJ7CBKUH1fYz5bFEGosqkw==}
+    engines: {node: '>=10.0.0'}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -3329,6 +3336,8 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
+
+  animated-backgrounds@2.0.0: {}
 
   ansi-regex@5.0.1: {}
 
