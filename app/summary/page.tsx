@@ -14,8 +14,13 @@ import {
   Home,
   CreditCard,
   SendHorizonal,
+  ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { VoiceInput } from "@/components/VoiceInput";
+import { VoiceOutput } from "@/components/VoiceOutput";
+import { useVoice } from "@/contexts/VoiceContext";
+import VoiceMode from "@/components/VoiceMode";
 import DetailedView from "@/components/detailed-view";
 
 const ANIMATION_CONFIG = {
@@ -91,10 +96,14 @@ export default function Summary() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showDetailView, setShowDetailView] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice functionality
+  const { voiceService, isVoiceEnabled, error: voiceError } = useVoice();
 
   const glassStyle = useRef({
     depth: 16,
@@ -117,20 +126,20 @@ export default function Summary() {
       const aiMessages = [
         {
           role: 'system' as const,
-          content: `You are a helpful AI financial assistant with access to powerful financial tools. You can:
+          content: `Du bist ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
 
-1. Generate monthly budget widgets when users ask about their budget status, remaining money, or spending
-2. Calculate compound interest for investment planning
-3. Calculate monthly payments for loans and mortgages
-4. Provide personalized financial advice
+1. Monatliche Budget-Widgets generieren, wenn Benutzer nach ihrem Budgetstatus, verbleibendem Geld oder Ausgaben fragen
+2. Zinseszins für Investitionsplanung berechnen
+3. Monatliche Zahlungen für Kredite und Hypotheken berechnen
+4. Persönliche Finanzberatung anbieten
 
-IMPORTANT: Keep your responses concise and focused. When users ask about budgets, spending, or financial status:
-- Use the generateMonthlyBudgetWidget tool to show the data visually
-- Give ONLY a brief, relevant response (1-2 sentences max)
-- Do NOT repeat all the numbers or details in text since the widget will display them
-- Focus on insights, not data regurgitation
+WICHTIG: Halte deine Antworten prägnant und fokussiert. Wenn Benutzer nach Budgets, Ausgaben oder Finanzstatus fragen:
+- Verwende das generateMonthlyBudgetWidget-Tool, um die Daten visuell anzuzeigen
+- Gib NUR eine kurze, relevante Antwort (max. 1-2 Sätze)
+- Wiederhole NICHT alle Zahlen oder Details im Text, da das Widget sie anzeigt
+- Konzentriere dich auf Erkenntnisse, nicht auf Datenwiederholung
 
-Example: "Here's your budget overview for this month. You're currently on track with 65% of your budget used."`
+Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit auf Kurs mit 65% deines verbrauchten Budgets."`
         },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -210,7 +219,7 @@ Example: "Here's your budget overview for this month. You're currently on track 
       setMessages([
         {
           id: "1",
-          content: "Hello! I'm your AI financial assistant. I can help you with budget tracking, spending analysis, and financial planning. Try asking me about your monthly budget or how much money you have left this month!",
+          content: "Hallo! Ich bin dein KI-Finanzassistent. Ich kann dir bei der Budgetverfolgung, Ausgabenanalyse und Finanzplanung helfen. Frag mich nach deinem monatlichen Budget oder wie viel Geld du diesen Monat noch übrig hast!",
           sender: "other",
           timestamp: new Date(),
         },
@@ -284,16 +293,25 @@ Example: "Here's your budget overview for this month. You're currently on track 
             }}
           >
             <h1 className="text-3xl font-extrabold tracking-tighter text-gray-900 mb-1">
-              Your Financial Summary
+              Deine Finanzübersicht
             </h1>
             <br></br>
-            <motion.button
-              className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-blue-600"
-              whileTap={{ scale: 0.9 }}
-              onClick={handleViewButtonClick}
-            >
-              View
-            </motion.button>
+            <div className="flex gap-3">
+              <motion.button
+                className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-blue-600"
+                whileTap={{ scale: 0.9 }}
+                onClick={handleViewButtonClick}
+              >
+                View
+              </motion.button>
+              <motion.button
+                className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-purple-600"
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsVoiceMode(true)}
+              >
+                Voice Mode
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Content Area - Placeholder */}
@@ -327,6 +345,17 @@ Example: "Here's your budget overview for this month. You're currently on track 
                         <div className="text-sm font-bold">
                           {message.content}
                         </div>
+
+                        {/* Voice Output for AI Messages */}
+                        {message.sender === "other" && isVoiceEnabled && voiceService && (
+                          <div className="mt-2 flex justify-end">
+                            <VoiceOutput
+                              text={typeof message.content === 'string' ? message.content : 'AI response'}
+                              voiceService={voiceService}
+                              disabled={isProcessing}
+                            />
+                          </div>
+                        )}
                         {message.budgetWidget && (
                           <div className="mt-2">
                             <MonthlyBudgetWidget
@@ -368,10 +397,32 @@ Example: "Here's your budget overview for this month. You're currently on track 
                       processUserMessage(input.trim());
                     }
                   }}
-                  placeholder={isProcessing ? "AI is thinking..." : "Type your message..."}
+                  placeholder={isProcessing ? "KI denkt nach..." : "Schreibe deine Nachricht..."}
                   disabled={isProcessing}
                   className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+
+                {/* Voice Input Button */}
+                {isVoiceEnabled && voiceService ? (
+                  <VoiceInput
+                    onTranscriptionComplete={(text) => {
+                      // Automatically send the transcribed text to ChatGPT
+                      console.log('Voice transcription received:', text);
+                      processUserMessage(text);
+                    }}
+                    onError={(error) => {
+                      console.error('Voice input error:', error);
+                      // You could add a toast notification here
+                    }}
+                    voiceService={voiceService}
+                    disabled={isProcessing}
+                  />
+                ) : (
+                  <div className="text-xs text-gray-500 p-2">
+                    Voice: {voiceError || 'Loading...'}
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     if (input.trim() && !isProcessing) {
@@ -381,7 +432,7 @@ Example: "Here's your budget overview for this month. You're currently on track 
                   disabled={isProcessing}
                   className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing ? "Processing..." : <SendHorizonal />}
+                  {isProcessing ? "Verarbeite..." : <SendHorizonal />}
                 </button>
               </div>
             </div>
@@ -451,11 +502,11 @@ Example: "Here's your budget overview for this month. You're currently on track 
                       animate="visible"
                     >
                       {[
-                        { icon: BarChart3, text: "How much money do I have left this month?" },
-                        { icon: Coffee, text: "Show me my monthly budget overview" },
-                        { icon: BarChart3, text: "Am I on track with my budget?" },
-                        { icon: Home, text: "What's my spending status?" },
-                        { icon: CreditCard, text: "How much have I spent so far?" },
+                        { icon: BarChart3, text: "Wie viel Geld habe ich diesen Monat noch übrig?" },
+                        { icon: Coffee, text: "Zeig mir meine monatliche Budgetübersicht" },
+                        { icon: BarChart3, text: "Bin ich mit meinem Budget auf Kurs?" },
+                        { icon: Home, text: "Wie ist mein Ausgabenstatus?" },
+                        { icon: CreditCard, text: "Wie viel habe ich bisher ausgegeben?" },
                       ].map((suggestion, index) => (
                         <motion.div key={index} variants={itemVariants}>
                           <Button
@@ -492,7 +543,178 @@ Example: "Here's your budget overview for this month. You're currently on track 
       </div>
 
       {/* Detailed View Overlay */}
-      <DetailedView isOpen={showDetailView} onClose={handleBackButtonClick} />
+      <AnimatePresence>
+        {showDetailView && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-white"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 200,
+              duration: 0.6,
+            }}
+          >
+            <div className="min-h-screen bg-white">
+              <div className="max-w-md mx-auto p-6 space-y-8">
+                {/* Header with Back Button */}
+                <motion.div
+                  className="pt-8 pb-4 flex items-center gap-4"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <motion.button
+                    onClick={handleBackButtonClick}
+                    className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowLeft className="h-5 w-5 text-gray-700" />
+                  </motion.button>
+                  <h1 className="text-4xl font-extrabold tracking-tighter text-gray-900">
+                    Financial Details
+                  </h1>
+                </motion.div>
+
+                {/* Content Area */}
+                <motion.div
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  {/* Portfolio Overview */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Portfolio Overview</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Total Value</p>
+                        <p className="text-2xl font-bold text-gray-900">$47,382</p>
+                        <p className="text-sm text-green-600">+5.2% this month</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Monthly Gain</p>
+                        <p className="text-2xl font-bold text-green-600">+$2,341</p>
+                        <p className="text-sm text-gray-600">vs last month</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Transactions */}
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h3>
+                    <div className="space-y-3">
+                      {[
+                        { name: "Coffee Shop", amount: "-$4.50", date: "Today", category: "Food" },
+                        { name: "Salary Deposit", amount: "+$3,200", date: "Yesterday", category: "Income" },
+                        { name: "Grocery Store", amount: "-$67.80", date: "2 days ago", category: "Food" },
+                        { name: "Investment Return", amount: "+$156.20", date: "3 days ago", category: "Investment" },
+                      ].map((transaction, index) => (
+                        <motion.div
+                          key={index}
+                          className="flex justify-between items-center p-3 bg-white rounded-lg border"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 + index * 0.1 }}
+                        >
+                          <div>
+                            <p className="font-semibold text-gray-900">{transaction.name}</p>
+                            <p className="text-sm text-gray-600">{transaction.date} • {transaction.category}</p>
+                          </div>
+                          <p className={`font-bold ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+                            }`}>
+                            {transaction.amount}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Spending Categories */}
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-2xl p-6 border border-purple-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Spending Categories</h3>
+                    <div className="space-y-3">
+                      {[
+                        { category: "Food & Dining", amount: "$342", percentage: 35, color: "bg-blue-500" },
+                        { category: "Transportation", amount: "$156", percentage: 25, color: "bg-green-500" },
+                        { category: "Entertainment", amount: "$98", percentage: 20, color: "bg-purple-500" },
+                        { category: "Shopping", amount: "$87", percentage: 20, color: "bg-orange-500" },
+                      ].map((item, index) => (
+                        <motion.div
+                          key={index}
+                          className="space-y-2"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.6 + index * 0.1 }}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">{item.category}</span>
+                            <span className="text-sm font-bold text-gray-900">{item.amount}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <motion.div
+                              className={`h-2 rounded-full ${item.color}`}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${item.percentage}%` }}
+                              transition={{ delay: 0.8 + index * 0.1, duration: 0.8 }}
+                            />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Goals Section */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Savings Goals</h3>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold text-gray-900">Emergency Fund</span>
+                          <span className="text-sm text-gray-600">$8,500 / $10,000</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <motion.div
+                            className="h-3 bg-green-500 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: "85%" }}
+                            transition={{ delay: 1, duration: 1 }}
+                          />
+                        </div>
+                        <p className="text-sm text-green-600 mt-1">85% complete</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold text-gray-900">Vacation Fund</span>
+                          <span className="text-sm text-gray-600">$2,100 / $5,000</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <motion.div
+                            className="h-3 bg-blue-500 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: "42%" }}
+                            transition={{ delay: 1.2, duration: 1 }}
+                          />
+                        </div>
+                        <p className="text-sm text-blue-600 mt-1">42% complete</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Voice Mode Overlay */}
+      <VoiceMode
+        isActive={isVoiceMode}
+        onToggle={() => setIsVoiceMode(false)}
+      />
     </div>
   );
 }
