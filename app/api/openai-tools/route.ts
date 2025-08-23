@@ -65,6 +65,14 @@ async function executeToolCall(
       throw new Error(`Unknown tool: ${name}`);
   }
 }
+  /**
+   * Handle POST requests to the OpenAI API with custom tools.
+   *
+   * @param {NextRequest} request - The request object.
+   * @returns {Promise<NextResponse>} - The response object.
+   *
+   * The endpoint expects the following JSON payload:
+   * 
 export async function POST(request: NextRequest) {
   try {
     const {
