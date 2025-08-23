@@ -17,6 +17,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { VoiceInput } from "@/components/VoiceInput";
+import { VoiceOutput } from "@/components/VoiceOutput";
+import { useVoice } from "@/contexts/VoiceContext";
+import VoiceMode from "@/components/VoiceMode";
 
 const ANIMATION_CONFIG = {
   spring: {
@@ -91,10 +95,14 @@ export default function Summary() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showDetailView, setShowDetailView] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice functionality
+  const { voiceService, isVoiceEnabled, error: voiceError } = useVoice();
 
   const glassStyle = useRef({
     depth: 16,
@@ -117,20 +125,20 @@ export default function Summary() {
       const aiMessages = [
         {
           role: 'system' as const,
-          content: `You are a helpful AI financial assistant with access to powerful financial tools. You can:
+          content: `Du bist ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
 
-1. Generate monthly budget widgets when users ask about their budget status, remaining money, or spending
-2. Calculate compound interest for investment planning
-3. Calculate monthly payments for loans and mortgages
-4. Provide personalized financial advice
+1. Monatliche Budget-Widgets generieren, wenn Benutzer nach ihrem Budgetstatus, verbleibendem Geld oder Ausgaben fragen
+2. Zinseszins für Investitionsplanung berechnen
+3. Monatliche Zahlungen für Kredite und Hypotheken berechnen
+4. Persönliche Finanzberatung anbieten
 
-IMPORTANT: Keep your responses concise and focused. When users ask about budgets, spending, or financial status:
-- Use the generateMonthlyBudgetWidget tool to show the data visually
-- Give ONLY a brief, relevant response (1-2 sentences max)
-- Do NOT repeat all the numbers or details in text since the widget will display them
-- Focus on insights, not data regurgitation
+WICHTIG: Halte deine Antworten prägnant und fokussiert. Wenn Benutzer nach Budgets, Ausgaben oder Finanzstatus fragen:
+- Verwende das generateMonthlyBudgetWidget-Tool, um die Daten visuell anzuzeigen
+- Gib NUR eine kurze, relevante Antwort (max. 1-2 Sätze)
+- Wiederhole NICHT alle Zahlen oder Details im Text, da das Widget sie anzeigt
+- Konzentriere dich auf Erkenntnisse, nicht auf Datenwiederholung
 
-Example: "Here's your budget overview for this month. You're currently on track with 65% of your budget used."`
+Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit auf Kurs mit 65% deines verbrauchten Budgets."`
         },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -210,7 +218,7 @@ Example: "Here's your budget overview for this month. You're currently on track 
       setMessages([
         {
           id: "1",
-          content: "Hello! I'm your AI financial assistant. I can help you with budget tracking, spending analysis, and financial planning. Try asking me about your monthly budget or how much money you have left this month!",
+          content: "Hallo! Ich bin dein KI-Finanzassistent. Ich kann dir bei der Budgetverfolgung, Ausgabenanalyse und Finanzplanung helfen. Frag mich nach deinem monatlichen Budget oder wie viel Geld du diesen Monat noch übrig hast!",
           sender: "other",
           timestamp: new Date(),
         },
@@ -284,16 +292,25 @@ Example: "Here's your budget overview for this month. You're currently on track 
             }}
           >
             <h1 className="text-3xl font-extrabold tracking-tighter text-gray-900 mb-1">
-              Your Financial Summary
+              Deine Finanzübersicht
             </h1>
             <br></br>
-            <motion.button
-              className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-blue-600"
-              whileTap={{ scale: 0.9 }}
-              onClick={handleViewButtonClick}
-            >
-              View
-            </motion.button>
+            <div className="flex gap-3">
+              <motion.button
+                className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-blue-600"
+                whileTap={{ scale: 0.9 }}
+                onClick={handleViewButtonClick}
+              >
+                View
+              </motion.button>
+              <motion.button
+                className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-purple-600"
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsVoiceMode(true)}
+              >
+                Voice Mode
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Content Area - Placeholder */}
@@ -327,6 +344,17 @@ Example: "Here's your budget overview for this month. You're currently on track 
                         <div className="text-sm font-bold">
                           {message.content}
                         </div>
+
+                        {/* Voice Output for AI Messages */}
+                        {message.sender === "other" && isVoiceEnabled && voiceService && (
+                          <div className="mt-2 flex justify-end">
+                            <VoiceOutput
+                              text={typeof message.content === 'string' ? message.content : 'AI response'}
+                              voiceService={voiceService}
+                              disabled={isProcessing}
+                            />
+                          </div>
+                        )}
                         {message.budgetWidget && (
                           <div className="mt-2">
                             <MonthlyBudgetWidget
@@ -368,10 +396,32 @@ Example: "Here's your budget overview for this month. You're currently on track 
                       processUserMessage(input.trim());
                     }
                   }}
-                  placeholder={isProcessing ? "AI is thinking..." : "Type your message..."}
+                  placeholder={isProcessing ? "KI denkt nach..." : "Schreibe deine Nachricht..."}
                   disabled={isProcessing}
                   className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+
+                {/* Voice Input Button */}
+                {isVoiceEnabled && voiceService ? (
+                  <VoiceInput
+                    onTranscriptionComplete={(text) => {
+                      // Automatically send the transcribed text to ChatGPT
+                      console.log('Voice transcription received:', text);
+                      processUserMessage(text);
+                    }}
+                    onError={(error) => {
+                      console.error('Voice input error:', error);
+                      // You could add a toast notification here
+                    }}
+                    voiceService={voiceService}
+                    disabled={isProcessing}
+                  />
+                ) : (
+                  <div className="text-xs text-gray-500 p-2">
+                    Voice: {voiceError || 'Loading...'}
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     if (input.trim() && !isProcessing) {
@@ -381,7 +431,7 @@ Example: "Here's your budget overview for this month. You're currently on track 
                   disabled={isProcessing}
                   className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing ? "Processing..." : <SendHorizonal />}
+                  {isProcessing ? "Verarbeite..." : <SendHorizonal />}
                 </button>
               </div>
             </div>
@@ -451,11 +501,11 @@ Example: "Here's your budget overview for this month. You're currently on track 
                       animate="visible"
                     >
                       {[
-                        { icon: BarChart3, text: "How much money do I have left this month?" },
-                        { icon: Coffee, text: "Show me my monthly budget overview" },
-                        { icon: BarChart3, text: "Am I on track with my budget?" },
-                        { icon: Home, text: "What's my spending status?" },
-                        { icon: CreditCard, text: "How much have I spent so far?" },
+                        { icon: BarChart3, text: "Wie viel Geld habe ich diesen Monat noch übrig?" },
+                        { icon: Coffee, text: "Zeig mir meine monatliche Budgetübersicht" },
+                        { icon: BarChart3, text: "Bin ich mit meinem Budget auf Kurs?" },
+                        { icon: Home, text: "Wie ist mein Ausgabenstatus?" },
+                        { icon: CreditCard, text: "Wie viel habe ich bisher ausgegeben?" },
                       ].map((suggestion, index) => (
                         <motion.div key={index} variants={itemVariants}>
                           <Button
@@ -658,6 +708,12 @@ Example: "Here's your budget overview for this month. You're currently on track 
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Voice Mode Overlay */}
+      <VoiceMode 
+        isActive={isVoiceMode} 
+        onToggle={() => setIsVoiceMode(false)} 
+      />
     </div>
   );
 }

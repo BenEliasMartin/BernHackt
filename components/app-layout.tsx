@@ -6,6 +6,7 @@ import { Dashboard } from "@/components/dashboard"
 import { FinanceAgent } from "@/components/finance-agent"
 import { LiquidNavbar } from "@/components/liquid-navbar"
 import { ViewportBackground } from "@/components/viewport-background"
+import { VoiceProvider } from "@/contexts/VoiceContext"
 
 export function AppLayout() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -22,7 +23,7 @@ export function AppLayout() {
   }
 
   return (
-    <>
+    <VoiceProvider>
       <ViewportBackground />
 
       <div className="min-h-screen bg-white relative z-10">
@@ -44,6 +45,6 @@ export function AppLayout() {
       </div>
 
       <LiquidNavbar activeTab={activeTab} onTabChange={setActiveTab} />
-    </>
+    </VoiceProvider>
   )
 }
