@@ -319,7 +319,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             >
               <div className="space-y-3">
                 <motion.h1
-                  className="text-3xl font-bold text-slate-900 tracking-tight leading-tight font-[Satoshi]"
+                  className="text-3xl font-bold text-slate-900 tracking-tight leading-tight font-satoshi"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
@@ -388,7 +388,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                           </motion.div>
 
                           <motion.span
-                            className="text-base font-medium text-slate-800 tracking-tight font-[Satoshi]"
+                            className="text-base font-medium text-slate-800 tracking-tight font-satoshi"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3, duration: 0.6 }}
@@ -674,7 +674,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       transition={{ delay: 0.7 }}
                     >
                       <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
+                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-satoshi">
                           Daily Updates
                         </h3>
 
@@ -729,7 +729,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                                           <IconComponent className="w-6 h-6 text-slate-700" />
                                         </div>
                                         <div className="text-left">
-                                          <h4 className="text-lg font-semibold text-slate-900 font-[Satoshi]">{option.label}</h4>
+                                          <h4 className="text-lg font-semibold text-slate-900 font-satoshi">{option.label}</h4>
                                           {option.duration && (
                                             <p className="text-sm text-slate-500">{option.duration}</p>
                                           )}
@@ -873,7 +873,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       transition={{ delay: 1.2 }}
                     >
                       <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
+                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-satoshi">
                           Weekly Recap
                         </h3>
                         <div className="space-y-3">
@@ -984,12 +984,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                                     className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-600"}`}
                                   />
                                 </div>
-                                <span className="text-base font-medium font-[Satoshi]">{option.label}</span>
+                                <span className="text-base font-medium font-satoshi">{option.label}</span>
                               </div>
 
                               <div className="flex items-center gap-3">
                                 <span
-                                  className={`text-lg font-semibold font-[Satoshi] ${isSelected ? "text-white" : "text-slate-900"}`}
+                                  className={`text-lg font-semibold font-satoshi ${isSelected ? "text-white" : "text-slate-900"}`}
                                 >
                                   {option.savings}
                                 </span>
@@ -1024,7 +1024,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.2 }}
                     >
-                      <p className="text-base text-slate-500 font-medium font-[Satoshi]">
+                      <p className="text-base text-slate-500 font-medium font-satoshi">
                         Any one of these gets you to Japan in ~3 months.
                       </p>
                     </motion.div>
