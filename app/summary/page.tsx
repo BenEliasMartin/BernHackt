@@ -78,7 +78,7 @@ const itemVariants = {
 interface ChatMessage {
   id: string;
   content: React.ReactNode;
-  sender: 'user' | 'other';
+  sender: "user" | "other";
   timestamp: Date;
 }
 
@@ -100,6 +100,26 @@ export default function Summary() {
     roughness: 0,
   });
 
+  const processUserMessage = (message: string) => {
+    pushUserMessage(input.trim());
+    setInput("");
+    // Call clanker API route
+    fetch("/api/clanker", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: input.trim() }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        pushOtherMessage(data.message);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -108,7 +128,7 @@ export default function Summary() {
       ) {
         setShowSuggestions(false);
       }
-    };
+    };  
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -119,37 +139,39 @@ export default function Summary() {
   useEffect(() => {
     // Add initial message after component mounts to avoid hydration mismatch
     if (messages.length === 0) {
-      setMessages([{
-        id: '1',
-        content: 'Hello! How can I help you with your finances today?',
-        sender: 'other',
-        timestamp: new Date()
-      }]);
+      setMessages([
+        {
+          id: "1",
+          content: "Hello! How can I help you with your finances today?",
+          sender: "other",
+          timestamp: new Date(),
+        },
+      ]);
     }
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const pushUserMessage = (content: React.ReactNode) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       content,
-      sender: 'user',
-      timestamp: new Date()
+      sender: "user",
+      timestamp: new Date(),
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
   };
 
   const pushOtherMessage = (content: React.ReactNode) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       content,
-      sender: 'other',
-      timestamp: new Date()
+      sender: "other",
+      timestamp: new Date(),
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -207,9 +229,11 @@ export default function Summary() {
             {/* Placeholder Widget 1 - Chat Box */}
             <div className="bg-gray-50 rounded-2xl p-0 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">Clanker Chat</h3>
+                <h3 className="text-lg font-bold text-gray-800">
+                  Clanker Chat
+                </h3>
               </div>
-              
+
               <div className="h-80 overflow-y-auto bg-white p-0 space-y-3">
                 <AnimatePresence>
                   {messages.map((message) => (
@@ -218,20 +242,33 @@ export default function Summary() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${
+                        message.sender === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
                     >
                       <div
                         className={`max-w-[80%] p-5 rounded-3xl ${
-                          message.sender === 'user'
-                            ? 'bg-blue-700 text-white rounded-br-md'
-                            : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                          message.sender === "user"
+                            ? "bg-blue-700 text-white rounded-br-md"
+                            : "bg-gray-100 text-gray-800 rounded-bl-md"
                         }`}
                       >
-                        <div className="text-sm font-bold">{message.content}</div>
-                        <div className={`text-xs mt-1 opacity-70 ${
-                          message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div className="text-sm font-bold">
+                          {message.content}
+                        </div>
+                        <div
+                          className={`text-xs mt-1 opacity-70 ${
+                            message.sender === "user"
+                              ? "text-blue-100"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {message.timestamp.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </div>
                       </div>
                     </motion.div>
@@ -239,20 +276,15 @@ export default function Summary() {
                 </AnimatePresence>
                 <div ref={messagesEndRef} />
               </div>
-              
+
               <div className="mt-4 flex gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter' && input.trim()) {
-                      pushUserMessage(input.trim());
-                      setInput('');
-                      // Simulate bot response after a delay
-                      setTimeout(() => {
-                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
-                      }, 1000);
+                    if (e.key === "Enter" && input.trim()) {
+                      processUserMessage(input.trim());
                     }
                   }}
                   placeholder="Type your message..."
@@ -261,12 +293,7 @@ export default function Summary() {
                 <button
                   onClick={() => {
                     if (input.trim()) {
-                      pushUserMessage(input.trim());
-                      setInput('');
-                      // Simulate bot response after a delay
-                      setTimeout(() => {
-                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
-                      }, 1000);
+                      processUserMessage(input.trim());
                     }
                   }}
                   className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
