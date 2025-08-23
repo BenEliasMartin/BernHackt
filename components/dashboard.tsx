@@ -60,7 +60,7 @@ export function Dashboard() {
             ease: ANIMATION_CONFIG.easing,
           }}
         >
-          <h1 className="text-3xl font-extralight text-gray-900 mb-2 tracking-tight">Financial Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tighter font-sans">Financial Dashboard</h1>
           <p className="text-gray-500 text-sm">Your complete financial overview</p>
         </motion.div>
 

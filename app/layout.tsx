@@ -33,13 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${montserrat.variable} ${openSans.variable} dark`}>
       <head>
-        <link href="https://api.fontshare.com/v2/css?f[]=satoshi@1,900,700,500,301,701,300,501,401,901,400&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Geist+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <style>{`
 html {
-  font-family: 'Satoshi', ${GeistSans.style.fontFamily};
-  --font-sans: 'Satoshi', ${openSans.style.fontFamily};
+  font-family: 'Geist Sans', ${GeistSans.style.fontFamily}, sans-serif;
+  --font-sans: 'Geist Sans', ${GeistSans.style.fontFamily}, sans-serif;
   --font-mono: ${GeistMono.variable};
-  --font-heading: 'Satoshi', ${montserrat.style.fontFamily};
+  --font-heading: 'Geist Sans', ${GeistSans.style.fontFamily}, sans-serif;
 }
         `}</style>
       </head>
