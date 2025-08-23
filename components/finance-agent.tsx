@@ -7,7 +7,6 @@ import { Mic, MessageCircle, Coffee, BarChart3, Home, CreditCard } from "lucide-
 import { motion, AnimatePresence } from "framer-motion"
 import { BalanceWidget } from "@/components/widgets/balance-widget"
 import { ChallengeWidget } from "@/components/widgets/challenge-widget"
-import { BudgetWidget } from "@/components/widgets/budget-widget"
 import { GoalsWidget } from "@/components/widgets/goals-widget"
 import { NewsWidget } from "@/components/widgets/news-widget"
 
@@ -73,7 +72,7 @@ const itemVariants = {
 
 interface Widget {
   id: string
-  type: "balance" | "challenge" | "spending" | "goals" | "news"
+  type: "balance" | "challenge" | "goals" | "news"
   data?: any
 }
 
@@ -112,9 +111,9 @@ const analyzeUserIntent = (input: string): Widget[] => {
     return [{ id: "balance", type: "balance", data: { activeTab: "debt" } }]
   }
 
-  // Spending/budget related queries
+  // Spending/budget related queries - redirect to balance widget
   if (lowerInput.match(/(spending|spend|budget|expense|cost|money|category|breakdown|pattern|where.*money|how much)/)) {
-    return [{ id: "spending", type: "spending" }]
+    return [{ id: "balance", type: "balance", data: { activeTab: "budget" } }]
   }
 
   // Goals related queries
@@ -136,7 +135,6 @@ const analyzeUserIntent = (input: string): Widget[] => {
   if (lowerInput.match(/(overview|summary|everything|all|dashboard|complete|full)/)) {
     return [
       { id: "balance", type: "balance" },
-      { id: "spending", type: "spending" },
       { id: "goals", type: "goals" },
       { id: "news", type: "news" },
     ]
@@ -233,12 +231,7 @@ export function FinanceAgent() {
           </motion.div>
         )
 
-      case "spending":
-        return (
-          <motion.div key={widget.id} variants={widgetVariants} initial="hidden" animate="visible" exit="exit" layout>
-            <BudgetWidget />
-          </motion.div>
-        )
+
 
       case "goals":
         return (

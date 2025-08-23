@@ -2,18 +2,58 @@
 
 import { Card } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, LucidePieChart, Flame, CreditCard } from "lucide-react"
-import {
-  AreaChart,
-  Area,
-  PieChart as RechartsPieChart,
-  Cell,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts"
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+
+// Dynamic import with no SSR
+const ResponsiveContainer = dynamic(
+  () => import('recharts').then((mod) => mod.ResponsiveContainer),
+  { ssr: false }
+)
+const AreaChart = dynamic(
+  () => import('recharts').then((mod) => mod.AreaChart),
+  { ssr: false }
+)
+const Area = dynamic(
+  () => import('recharts').then((mod) => mod.Area),
+  { ssr: false }
+)
+const BarChart = dynamic(
+  () => import('recharts').then((mod) => mod.BarChart),
+  { ssr: false }
+)
+const Bar = dynamic(
+  () => import('recharts').then((mod) => mod.Bar),
+  { ssr: false }
+)
+const PieChart = dynamic(
+  () => import('recharts').then((mod) => mod.PieChart),
+  { ssr: false }
+)
+const Pie = dynamic(
+  () => import('recharts').then((mod) => mod.Pie),
+  { ssr: false }
+)
+const Cell = dynamic(
+  () => import('recharts').then((mod) => mod.Cell),
+  { ssr: false }
+)
+const XAxis = dynamic(
+  () => import('recharts').then((mod) => mod.XAxis),
+  { ssr: false }
+)
+const YAxis = dynamic(
+  () => import('recharts').then((mod) => mod.YAxis),
+  { ssr: false }
+)
+const CartesianGrid = dynamic(
+  () => import('recharts').then((mod) => mod.CartesianGrid),
+  { ssr: false }
+)
+const Tooltip = dynamic(
+  () => import('recharts').then((mod) => mod.Tooltip),
+  { ssr: false }
+)
 
 const portfolioData = [
   { month: "Jul", value: 6800, growth: -1.2 },
@@ -26,6 +66,16 @@ const portfolioData = [
   { month: "Feb", value: 7520, growth: -2.1 },
   { month: "Mar", value: 7750, growth: 3.1 },
   { month: "Apr", value: 7832, growth: 1.1 },
+]
+
+const dailySpendingData = [
+  { day: "Mon", amount: 85, dayFull: "Monday" },
+  { day: "Tue", amount: 45, dayFull: "Tuesday" },
+  { day: "Wed", amount: 120, dayFull: "Wednesday" },
+  { day: "Thu", amount: 65, dayFull: "Thursday" },
+  { day: "Fri", amount: 140, dayFull: "Friday" },
+  { day: "Sat", amount: 35, dayFull: "Saturday" },
+  { day: "Sun", amount: 95, dayFull: "Sunday" },
 ]
 
 const budgetData = [
@@ -61,8 +111,10 @@ interface BalanceWidgetProps {
 export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "portfolio" | "budget" | "debt">(initialTab || "overview")
   const [isAnimating, setIsAnimating] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     if (initialTab && initialTab !== activeTab) {
       setActiveTab(initialTab)
     }
@@ -83,41 +135,37 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
         <div className="flex items-center justify-center gap-0 border-b border-gray-200">
           <button
             onClick={() => handleTabChange("overview")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${
-              activeTab === "overview"
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
-            }`}
+            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "overview"
+              ? "border-gray-900 text-gray-900"
+              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+              }`}
           >
             Overview
           </button>
           <button
             onClick={() => handleTabChange("portfolio")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${
-              activeTab === "portfolio"
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
-            }`}
+            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "portfolio"
+              ? "border-gray-900 text-gray-900"
+              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+              }`}
           >
             Portfolio
           </button>
           <button
             onClick={() => handleTabChange("budget")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${
-              activeTab === "budget"
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
-            }`}
+            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "budget"
+              ? "border-gray-900 text-gray-900"
+              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+              }`}
           >
             Budget
           </button>
           <button
             onClick={() => handleTabChange("debt")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${
-              activeTab === "debt"
-                ? "border-red-500 text-red-600"
-                : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
-            }`}
+            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "debt"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+              }`}
           >
             Debt
           </button>
@@ -138,27 +186,45 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-end justify-between gap-2 h-20 px-2">
-                  {[
-                    { height: 60, day: "Mon" },
-                    { height: 40, day: "Tue" },
-                    { height: 75, day: "Wed" },
-                    { height: 50, day: "Thu" },
-                    { height: 85, day: "Fri" },
-                    { height: 35, day: "Sat" },
-                    { height: 65, day: "Sun" },
-                  ].map((bar, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2 flex-1">
-                      <div
-                        className="bg-gray-200 rounded-sm w-full transition-all duration-500 hover:bg-gray-300"
-                        style={{
-                          height: `${bar.height}%`,
-                          animationDelay: `${i * 100}ms`,
+                <div className="h-20 w-full flex justify-center">
+                  {mounted ? (
+                    <BarChart
+                      width={350}
+                      height={80}
+                      data={dailySpendingData}
+                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    >
+                      <XAxis
+                        dataKey="day"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: '#9ca3af' }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          color: "#111827",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
+                        formatter={(value, name) => [`CHF ${value}`, 'Spent']}
+                        labelFormatter={(label, payload) => {
+                          const item = payload?.[0]?.payload
+                          return item ? item.dayFull : label
                         }}
                       />
-                      <span className="text-xs text-gray-400 font-light">{bar.day}</span>
+                      <Bar
+                        dataKey="amount"
+                        fill="#9ca3af"
+                        radius={[2, 2, 0, 0]}
+                      />
+                    </BarChart>
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">Loading chart...</span>
                     </div>
-                  ))}
+                  )}
                 </div>
                 <div className="text-center text-xs text-gray-400 uppercase tracking-wide font-light">
                   Daily Spending This Week
@@ -298,9 +364,14 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                 </div>
               </div>
 
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={portfolioData}>
+              <div className="h-48 w-full flex justify-center">
+                {mounted ? (
+                  <AreaChart
+                    width={400}
+                    height={192}
+                    data={portfolioData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#6b7280" stopOpacity={0.2} />
@@ -327,7 +398,11 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                       fill="url(#portfolioGradient)"
                     />
                   </AreaChart>
-                </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">Loading chart...</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
@@ -387,21 +462,36 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                   Asset Allocation
                 </h4>
                 <div className="flex items-center justify-center">
-                  <div className="w-32 h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPieChart
-                        data={assetAllocation}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={35}
-                        outerRadius={60}
-                        dataKey="value"
-                      >
-                        {assetAllocation.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
+                  <div className="w-32 h-32 flex justify-center">
+                    {mounted ? (
+                      <PieChart width={128} height={128}>
+                        <Pie
+                          data={assetAllocation}
+                          cx={64}
+                          cy={64}
+                          innerRadius={25}
+                          outerRadius={50}
+                          dataKey="value"
+                        >
+                          {assetAllocation.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                            color: "#111827",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                          }}
+                        />
+                      </PieChart>
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">Loading...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -466,9 +556,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                       </div>
                       <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            isOverBudget ? "bg-red-400" : "bg-gray-400"
-                          }`}
+                          className={`h-full rounded-full transition-all duration-700 ${isOverBudget ? "bg-red-400" : "bg-gray-400"
+                            }`}
                           style={{
                             width: `${Math.min(percentage, 100)}%`,
                             animationDelay: `${index * 100}ms`,
