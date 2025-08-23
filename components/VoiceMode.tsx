@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useVoice } from "@/contexts/VoiceContext";
@@ -30,8 +30,8 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
     const [aiResponse, setAiResponse] = useState("");
     const outputRef = useRef<HTMLDivElement>(null);
     const cancelledRef = useRef(false);
+    const ttsRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-    // Derived flags for readability
     const isListening = phase === "listening";
     const isSpeaking = phase === "speaking";
     const isProcessing = phase === "thinking";
@@ -42,21 +42,18 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         cancelledRef.current = false;
         setPhase("listening");
     };
-    const stopListening = () => setPhase("idle");
 
     const stopAll = () => {
         cancelledRef.current = true;
         setAiResponse("");
         setPhase("idle");
+        try { window.speechSynthesis?.cancel?.(); } catch { }
     };
 
     // Open/close lifecycle
     useEffect(() => {
-        if (isActive && isVoiceEnabled && voiceService) {
-            startListening();
-        } else {
-            stopAll();
-        }
+        if (isActive && isVoiceEnabled && voiceService) startListening();
+        else stopAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, isVoiceEnabled, voiceService]);
 
@@ -80,25 +77,22 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         setPhase("thinking");
 
         try {
-            // Keep voice-mode concise; you can swap in your longer finance system prompt if you prefer
             const aiMessages = [
                 {
                     role: "system" as const,
-                    content:
-                        "Du bist ein knapper Voice-Only-Assistent. Antworte in 1–2 kurzen Sätzen, ohne Listen oder Markdown.",
+                    content: "Du bist ein knapper Voice-Only-Assistent. Antworte in 1–2 kurzen Sätzen, ohne Listen oder Markdown.",
                 },
                 { role: "user" as const, content: message },
             ];
 
             const response: OpenAIToolsResponse = await callOpenAIWithTools(aiMessages);
 
-            // If a tool is called, we still just speak the text insight (no widgets in voice mode)
             const text =
                 response?.message?.content?.trim() ||
                 "Entschuldigung, ich habe dazu gerade keine Antwort.";
             setAiResponse(text);
             setPhase("speaking");
-        } catch (e) {
+        } catch {
             setAiResponse("Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es erneut.");
             setPhase("speaking");
         }
@@ -106,13 +100,11 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
 
     // VoiceInput -> transcription handler
     const handleVoiceInput = (text: string) => {
-        // Guard: avoid parallel loops
         if (isProcessing || isSpeaking) return;
         processUserMessage(text);
     };
 
     const handleVoiceError = () => {
-        // Recover by re-arming listening
         if (isActive) startListening();
     };
 
@@ -135,29 +127,39 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isSpeaking]);
 
-    // Orb visuals
-    const orbPulse = useMemo(() => {
-        if (phase === "listening")
-            return { scale: [1, 1.06, 1], boxShadow: ["0 0 0px #3b82f6", "0 0 24px #3b82f6", "0 0 0px #3b82f6"] };
-        if (phase === "thinking")
-            return { scale: [1, 1.03, 1], boxShadow: ["0 0 0px #a855f7", "0 0 20px #a855f7", "0 0 0px #a855f7"] };
-        if (phase === "speaking")
-            return { scale: [1, 1.04, 1], boxShadow: ["0 0 0px #10b981", "0 0 20px #10b981", "0 0 0px #10b981"] };
-        return { scale: [1], boxShadow: ["0 0 0px rgba(0,0,0,0.1)"] };
-    }, [phase]);
+    // ADD this effect (autoplay on ready)
+    useEffect(() => {
+        if (!isSpeaking || !aiResponse) return;
 
-    // Clickable overlay for the Spline orb
-    const toggleFromOrb = () => {
-        if (phase === "idle") startListening();
-        else stopAll();
-    };
+        // Try to auto-play VoiceOutput's <audio> if it exists
+        const tryPlayAudio = () => {
+            const audio = outputRef.current?.querySelector("audio") as HTMLAudioElement | null;
+            if (!audio) return false;
+            // ensure we start fresh
+            try { audio.currentTime = 0; } catch { }
+            audio.play().catch(() => {/* ignore; fallback below */ });
+            return true;
+        };
 
-    // Quick actions: interrupt and ask immediately
-    const runQuickAction = (text: string) => {
-        stopAll();
-        // Give browsers a tick to settle, then ask
-        setTimeout(() => processUserMessage(text), 0);
-    };
+        const played = tryPlayAudio();
+
+        // Fallback: Web Speech API (no UI)
+        if (!played && "speechSynthesis" in window) {
+            try { window.speechSynthesis.cancel(); } catch { }
+            const u = new SpeechSynthesisUtterance(aiResponse);
+            ttsRef.current = u;
+            u.onend = () => onSpeakEnd();
+            try { window.speechSynthesis.speak(u); } catch { onSpeakEnd(); }
+        }
+
+        return () => {
+            // cleanup any pending TTS if we unmount or phase changes
+            try { window.speechSynthesis?.cancel?.(); } catch { }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSpeaking, aiResponse]);
+
+
 
     return (
         <div>
@@ -192,17 +194,8 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 </motion.button>
                             </motion.div>
 
-                            {/* Orb (Spline) with clickable overlay */}
-                            <div className="relative">
-                                <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
-                                <motion.button
-                                    onClick={toggleFromOrb}
-                                    className="absolute inset-0 w-full h-full rounded-2xl focus:outline-none"
-                                    animate={orbPulse}
-                                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                                    aria-label={phase === "idle" ? "Start voice mode" : "Stop voice mode"}
-                                />
-                            </div>
+                            {/* Orb (Spline) */}
+                            <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
 
                             {/* Hidden voice components drive the loop */}
                             {isVoiceEnabled && voiceService ? (
@@ -221,8 +214,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                             <VoiceOutput
                                                 text={aiResponse}
                                                 voiceService={voiceService}
-                                                // If your VoiceOutput supports onEnd, this makes the loop explicit:
-                                                // @ts-ignore
+                                                // @ts-ignore optional prop if your component supports it
                                                 onEnd={onSpeakEnd}
                                                 disabled={false}
                                             />
@@ -235,7 +227,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 </div>
                             )}
 
-                            {/* Status + Quick Actions */}
+                            {/* Status */}
                             <motion.div
                                 className="space-y-3 mt-6"
                                 initial={{ opacity: 0, y: 20 }}
@@ -243,26 +235,10 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 transition={{ delay: 0.3, duration: ANIMATION_CONFIG.duration.medium }}
                             >
                                 <div className="text-xs text-gray-500 text-center">
-                                    {phase === "idle" && "Idle — tap the orb or press SPACE"}
+                                    {phase === "idle" && "Idle — tap SPACE"}
                                     {phase === "listening" && "Listening... (speak now)"}
                                     {phase === "thinking" && "Thinking..."}
                                     {phase === "speaking" && "Speaking..."}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    {["Wie viel Geld habe ich noch?", "Zeig mir mein Budget", "Wie sind meine Ausgaben?", "Finanzberatung bitte"].map(
-                                        (action, i) => (
-                                            <motion.button
-                                                key={i}
-                                                onClick={() => runQuickAction(action)}
-                                                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-gray-700 transition-colors"
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                {action}
-                                            </motion.button>
-                                        )
-                                    )}
                                 </div>
                             </motion.div>
                         </div>
