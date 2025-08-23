@@ -1,17 +1,17 @@
 import { Card } from "@/components/ui/card"
 
 const categories = [
-  { name: "Dining Out", spent: 580, budget: 500, color: "bg-gray-900" },
-  { name: "Groceries", spent: 420, budget: 600, color: "bg-gray-700" },
-  { name: "Transportation", spent: 180, budget: 300, color: "bg-gray-600" },
-  { name: "Entertainment", spent: 150, budget: 200, color: "bg-gray-500" },
+  { name: "Restaurant", spent: 580, budget: 500, color: "bg-gray-900" },
+  { name: "Lebensmittel", spent: 420, budget: 600, color: "bg-gray-700" },
+  { name: "Transport", spent: 180, budget: 300, color: "bg-gray-600" },
+  { name: "Unterhaltung", spent: 150, budget: 200, color: "bg-gray-500" },
 ]
 
 export function BudgetWidget() {
   return (
     <Card className="p-8 bg-white border border-gray-100 shadow-sm">
       <div className="space-y-6">
-        <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Monthly Budget</h3>
+        <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Monatliches Budget</h3>
 
         <div className="space-y-6">
           {categories.map((category) => {
@@ -33,7 +33,7 @@ export function BudgetWidget() {
                   />
                 </div>
                 {isOverBudget && (
-                  <div className="text-xs text-gray-600 font-light">{Math.round(percentage - 100)}% over budget</div>
+                  <div className="text-xs text-gray-600 font-light">{Math.round(percentage - 100)}% über Budget</div>
                 )}
               </div>
             )

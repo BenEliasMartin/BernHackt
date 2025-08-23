@@ -140,7 +140,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
               }`}
           >
-            Overview
+Übersicht
           </button>
           <button
             onClick={() => handleTabChange("portfolio")}
@@ -149,7 +149,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
               }`}
           >
-            Portfolio
+Portfolio
           </button>
           <button
             onClick={() => handleTabChange("budget")}
@@ -158,7 +158,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
               }`}
           >
-            Budget
+Budget
           </button>
           <button
             onClick={() => handleTabChange("debt")}
@@ -167,7 +167,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
               }`}
           >
-            Debt
+Schulden
           </button>
         </div>
 
@@ -178,10 +178,10 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
             <>
               <div className="text-center space-y-2">
                 <div className="text-5xl font-extralight text-gray-900 tracking-tight">CHF 11,847.50</div>
-                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">TOTAL BALANCE</div>
+                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">GESAMTKONTOSTAND</div>
                 <div className="flex items-center justify-center gap-2 text-gray-600">
                   <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm font-light">+2.3% this month</span>
+                  <span className="text-sm font-light">+2,3% in diesem Monat</span>
                 </div>
               </div>
 
@@ -222,19 +222,19 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                     </BarChart>
                   ) : (
                     <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">Loading chart...</span>
+                      <span className="text-gray-400 text-sm">Diagramm wird geladen...</span>
                     </div>
                   )}
                 </div>
                 <div className="text-center text-xs text-gray-400 uppercase tracking-wide font-light">
-                  Daily Spending This Week
+Tägliche Ausgaben diese Woche
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                 <div className="text-center space-y-2">
                   <div className="text-2xl font-extralight text-gray-900">CHF 7,832</div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Investments</div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Investitionen</div>
                   <div className="text-xs text-gray-600">+5.2%</div>
                   <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
@@ -245,7 +245,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                 </div>
                 <div className="text-center space-y-2">
                   <div className="text-2xl font-extralight text-gray-900">CHF 4,015</div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Savings</div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Ersparnisse</div>
                   <div className="text-xs text-gray-600">+8.1%</div>
                   <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
@@ -258,7 +258,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-light text-gray-900">Recent Transactions</h3>
+                  <h3 className="text-sm font-light text-gray-900">Letzte Transaktionen</h3>
                   <TrendingUp className="h-4 w-4 text-gray-400" />
                 </div>
 
@@ -274,7 +274,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                       </div>
                       <div>
                         <div className="text-sm font-light text-gray-900">Starbucks Zürich HB</div>
-                        <div className="text-xs text-gray-400">Today, 9:15 AM • Food & Dining</div>
+                        <div className="text-xs text-gray-400">Heute, 09:15 • Essen & Trinken</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-900">-CHF 6.40</div>
@@ -290,8 +290,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         />
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Migros Supermarket</div>
-                        <div className="text-xs text-gray-400">Yesterday, 6:30 PM • Groceries</div>
+                        <div className="text-sm font-light text-gray-900">Migros Supermarkt</div>
+                        <div className="text-xs text-gray-400">Gestern, 18:30 • Lebensmittel</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-900">-CHF 87.23</div>
@@ -303,8 +303,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         <span className="text-white font-light text-xs">SBB</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">SBB Train Ticket</div>
-                        <div className="text-xs text-gray-400">Yesterday, 2:45 PM • Transportation</div>
+                        <div className="text-sm font-light text-gray-900">SBB Zugticket</div>
+                        <div className="text-xs text-gray-400">Gestern, 14:45 • Transport</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-900">-CHF 24.60</div>
@@ -316,8 +316,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         <span className="text-white font-light text-xs">N26</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Investment Deposit</div>
-                        <div className="text-xs text-gray-400">2 days ago • Investment</div>
+                        <div className="text-sm font-light text-gray-900">Investitionseinzahlung</div>
+                        <div className="text-xs text-gray-400">Vor 2 Tagen • Investition</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-600">+CHF 500.00</div>
@@ -329,8 +329,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         <TrendingUp className="w-5 h-5 text-gray-600" />
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Salary Deposit</div>
-                        <div className="text-xs text-gray-400">3 days ago • Income</div>
+                        <div className="text-sm font-light text-gray-900">Gehaltseingang</div>
+                        <div className="text-xs text-gray-400">Vor 3 Tagen • Einkommen</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-600">+CHF 4,200.00</div>
@@ -342,8 +342,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         <span className="text-white font-light text-xs">UPC</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Internet & TV Bill</div>
-                        <div className="text-xs text-gray-400">4 days ago • Bills & Utilities</div>
+                        <div className="text-sm font-light text-gray-900">Internet & TV Rechnung</div>
+                        <div className="text-xs text-gray-400">Vor 4 Tagen • Rechnungen</div>
                       </div>
                     </div>
                     <div className="text-sm font-light text-gray-900">-CHF 89.90</div>
@@ -357,10 +357,10 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <div className="text-3xl font-extralight text-gray-900">CHF 7,832</div>
-                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">PORTFOLIO VALUE</div>
+                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">PORTFOLIOWERT</div>
                 <div className="flex items-center justify-center gap-2 text-gray-600">
                   <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm font-light">+5.2% (CHF 387) this month</span>
+                  <span className="text-sm font-light">+5,2% (387 CHF) in diesem Monat</span>
                 </div>
               </div>
 
@@ -400,13 +400,13 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                   </AreaChart>
                 ) : (
                   <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Loading chart...</span>
+                    <span className="text-gray-400 text-sm">Diagramm wird geladen...</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
-                <h4 className="text-sm font-light text-gray-900">Top Holdings</h4>
+                <h4 className="text-sm font-light text-gray-900">Grösste Positionen</h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
@@ -415,7 +415,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                       </div>
                       <div>
                         <div className="text-sm text-gray-900 font-light">Apple Inc.</div>
-                        <div className="text-xs text-gray-400">12 shares</div>
+                        <div className="text-xs text-gray-400">12 Aktien</div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -459,7 +459,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
               <div className="space-y-4">
                 <h4 className="text-sm font-light text-gray-900 flex items-center gap-2">
                   <LucidePieChart className="h-4 w-4" />
-                  Asset Allocation
+                  Vermögensaufteilung
                 </h4>
                 <div className="flex items-center justify-center">
                   <div className="w-32 h-32 flex justify-center">
@@ -489,7 +489,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                       </PieChart>
                     ) : (
                       <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">Loading...</span>
+                        <span className="text-gray-400 text-xs">Wird geladen...</span>
                       </div>
                     )}
                   </div>
@@ -512,30 +512,19 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <div className="text-3xl font-extralight text-gray-900">CHF 4,480</div>
-                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">MONTHLY SPENDING</div>
+                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">MONATLICHE AUSGABEN</div>
                 <div className="flex items-center justify-center gap-2 text-gray-600">
                   <TrendingDown className="h-4 w-4" />
-                  <span className="text-sm font-light">CHF 520 under budget</span>
+                  <span className="text-sm font-light">520 CHF unter Budget</span>
                 </div>
               </div>
 
               <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4 border border-orange-100">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <Flame className="h-6 w-6 text-orange-500" />
-                  <div className="text-center">
-                    <div className="text-2xl font-extralight text-gray-900">12</div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide font-light">Day Streak</div>
-                  </div>
-                </div>
-                <div className="text-center text-sm text-gray-600 font-light">
-                  You've stayed within budget for 12 consecutive days!
-                </div>
-                <div className="text-center text-xs text-gray-400 mt-1">Keep it up to reach your 30-day goal</div>
-                <div className="w-full h-1 bg-gray-200 rounded-full mt-3 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-orange-400 to-red-400 rounded-full transition-all duration-1000"
-                    style={{ width: "40%" }}
-                  />
+                <div className="text-center space-y-4">
+                  <div className="text-sm text-gray-600 font-light">Ihr Budget-Status</div>
+                  <div className="text-5xl font-extralight text-gray-900 tracking-tight">12</div>
+                  <div className="w-full h-px bg-gray-200 my-4"></div>
+                  <div className="text-sm text-gray-600 font-light">Tage in Folge, an denen Sie Ihr Budget eingehalten haben</div>
                 </div>
               </div>
 
@@ -565,8 +554,8 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         />
                       </div>
                       <div className="flex justify-between text-xs text-gray-500">
-                        <span>{Math.round(percentage)}% used</span>
-                        <span>CHF {item.budget - item.spent} remaining</span>
+                        <span>{Math.round(percentage)}% verbraucht</span>
+                        <span>Noch {item.budget - item.spent} CHF übrig</span>
                       </div>
                     </div>
                   )
@@ -578,45 +567,45 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
           {activeTab === "debt" && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <div className="text-3xl font-extralight text-gray-900">Paydown Plan</div>
-                <div className="text-sm text-gray-500 font-light">Your action plan to becoming debt-free</div>
+                <div className="text-3xl font-extralight text-gray-900">Tilgungsplan</div>
+                <div className="text-sm text-gray-500 font-light">Ihr Aktionsplan zur Schuldenfreiheit</div>
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
                 <div className="text-center space-y-4">
-                  <div className="text-sm text-gray-600 font-light">Your new estimated debt-free date</div>
-                  <div className="text-5xl font-extralight text-gray-900 tracking-tight">May 2028</div>
+                  <div className="text-sm text-gray-600 font-light">Ihr voraussichtliches Schuldenfrei-Datum</div>
+                  <div className="text-5xl font-extralight text-gray-900 tracking-tight">Mai 2028</div>
                   <div className="w-full h-px bg-gray-200 my-4"></div>
-                  <div className="text-sm text-gray-600 font-light">Estimated time saved</div>
-                  <div className="text-3xl font-extralight text-gray-900">2 years 6 months</div>
+                  <div className="text-sm text-gray-600 font-light">Eingesparte Zeit</div>
+                  <div className="text-3xl font-extralight text-gray-900">2 Jahre 6 Monate</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
                   <div className="text-center space-y-2">
-                    <div className="text-2xl font-extralight text-gray-900">$1,004.47</div>
+                    <div className="text-2xl font-extralight text-gray-900">1'004.47 CHF</div>
                     <div className="text-xs text-gray-500 font-light uppercase tracking-wide">
-                      Est. Interest Avoided
+                      Geschätzte Zinsen gespart
                     </div>
                   </div>
                 </div>
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
                   <div className="text-center space-y-2">
-                    <div className="text-2xl font-extralight text-gray-900">Mar, 2027</div>
-                    <div className="text-xs text-gray-500 font-light uppercase tracking-wide">First Debt Paid</div>
+                    <div className="text-2xl font-extralight text-gray-900">März 2027</div>
+                    <div className="text-xs text-gray-500 font-light uppercase tracking-wide">Erste Schuld getilgt</div>
                   </div>
                 </div>
               </div>
 
               <div className="text-center space-y-2 pt-4 border-t border-gray-100">
-                <div className="text-sm text-gray-500 font-light">Total to repay each month</div>
-                <div className="text-4xl font-extralight text-gray-900">$550</div>
+                <div className="text-sm text-gray-500 font-light">Gesamtbetrag, der jeden Monat zurückgezahlt werden muss</div>
+                <div className="text-4xl font-extralight text-gray-900">550 CHF</div>
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-light text-gray-900">Current Debts</h3>
+                  <h3 className="text-sm font-light text-gray-900">Aktuelle Schulden</h3>
                   <CreditCard className="h-4 w-4 text-gray-400" />
                 </div>
 
@@ -632,10 +621,10 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                         </div>
                         <div>
                           <div className="text-sm font-light text-gray-900">{debt.name}</div>
-                          <div className="text-xs text-gray-400">{`${debt.apr}% APR • Min. $${debt.minPayment}/month`}</div>
+                          <div className="text-xs text-gray-400">{`${debt.apr}% Zinssatz • Min. ${debt.minPayment} CHF/Monat`}</div>
                         </div>
                       </div>
-                      <div className="text-sm font-light text-gray-900">${debt.amount}</div>
+                      <div className="text-sm font-light text-gray-900">{debt.amount} CHF</div>
                     </div>
                   ))}
                 </div>

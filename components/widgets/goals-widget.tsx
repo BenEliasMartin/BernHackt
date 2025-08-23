@@ -3,21 +3,21 @@ import { Target, PiggyBank, Plane } from "lucide-react"
 
 const goals = [
   {
-    name: "Emergency Fund",
+    name: "Notfallfonds",
     current: 6800,
     target: 10000,
     icon: PiggyBank,
     color: "text-gray-700",
   },
   {
-    name: "Vacation Fund",
+    name: "Urlaubskasse",
     current: 2100,
     target: 5000,
     icon: Plane,
     color: "text-gray-600",
   },
   {
-    name: "Investment Goal",
+    name: "Sparziel",
     current: 15000,
     target: 20000,
     icon: Target,
@@ -29,7 +29,7 @@ export function GoalsWidget() {
   return (
     <Card className="p-8 bg-white border border-gray-100 shadow-sm">
       <div className="space-y-6">
-        <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Financial Goals</h3>
+        <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Finanzielle Ziele</h3>
 
         <div className="space-y-6">
           {goals.map((goal) => {
