@@ -6,11 +6,16 @@ import { Dashboard } from "@/components/dashboard"
 import { FinanceAgent } from "@/components/finance-agent"
 import { LiquidNavbar } from "@/components/liquid-navbar"
 import { ViewportBackground } from "@/components/viewport-background"
+import { Onboarding } from "@/components/onboarding"
 
 export function AppLayout() {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
 
   const renderContent = () => {
+    if (!isOnboardingComplete) {
+      return <Onboarding onComplete={() => setIsOnboardingComplete(true)} />
+    }
     switch (activeTab) {
       case "dashboard":
         return <Dashboard />
@@ -43,7 +48,9 @@ export function AppLayout() {
         </AnimatePresence>
       </div>
 
-      <LiquidNavbar activeTab={activeTab} onTabChange={setActiveTab} />
+      {isOnboardingComplete && (
+        <LiquidNavbar activeTab={activeTab} onTabChange={setActiveTab} />
+      )}
     </>
   )
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { BalanceWidget } from "@/components/widgets/balance-widget"
 import { ChallengeWidget } from "@/components/widgets/challenge-widget"
@@ -46,6 +47,7 @@ const itemVariants = {
 }
 
 export function Dashboard() {
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto p-6 space-y-8">
