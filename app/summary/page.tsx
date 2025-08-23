@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LiquidGlass } from "@specy/liquid-glass-react";
+import MonthlyBudgetWidget from "./MonthlyBudgetWidget";
+import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
 
 import {
   MessageCircle,
@@ -88,6 +90,8 @@ export default function Summary() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showDetailView, setShowDetailView] = useState(false);
+  const [budgetWidget, setBudgetWidget] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -102,24 +106,68 @@ export default function Summary() {
     roughness: 0,
   });
 
-  const processUserMessage = (message: string) => {
-    pushUserMessage(input.trim());
+  const processUserMessage = async (message: string) => {
+    pushUserMessage(message);
     setInput("");
-    // Call clanker API route
-    fetch("/api/clanker", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: input.trim() }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        pushOtherMessage(data.message);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+    setIsProcessing(true);
+
+    try {
+      // Prepare messages for OpenAI with tools
+      const aiMessages = [
+        {
+          role: 'system' as const,
+          content: `You are a helpful AI financial assistant with access to powerful financial tools. You can:
+
+1. Generate monthly budget widgets when users ask about their budget status, remaining money, or spending
+2. Calculate compound interest for investment planning
+3. Calculate monthly payments for loans and mortgages
+4. Provide personalized financial advice
+
+When users ask about their budget, remaining money for the month, or spending status, automatically use the generateMonthlyBudgetWidget tool to provide them with a comprehensive budget overview.
+
+For budget-related queries, use realistic sample data that demonstrates the tool's capabilities. Always explain what you're showing them and provide actionable insights.`
+        },
+        ...messages.map(msg => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: typeof msg.content === 'string' ? msg.content : 'Message content'
+        })),
+        {
+          role: 'user' as const,
+          content: message
+        }
+      ];
+
+      // Call OpenAI API with tools
+      const response: OpenAIToolsResponse = await callOpenAIWithTools(aiMessages);
+
+      // Check if any tools were called
+      if (response.toolCalls && response.toolCalls.length > 0) {
+        // Process tool calls
+        for (const toolCall of response.toolCalls) {
+          if (toolCall.function.name === 'generateMonthlyBudgetWidget') {
+            try {
+              const args = JSON.parse(toolCall.function.arguments);
+              const budgetData = {
+                type: "monthlyBudgetWidget",
+                data: args
+              };
+              setBudgetWidget(budgetData);
+            } catch (error) {
+              console.error('Error parsing tool arguments:', error);
+            }
+          }
+        }
+      }
+
+      // Add AI response to chat
+      pushOtherMessage(response.message.content || 'I apologize, but I couldn\'t generate a response at this time.');
+
+    } catch (error) {
+      console.error('Error calling OpenAI API:', error);
+      pushOtherMessage('Sorry, I encountered an error while processing your request. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   useEffect(() => {
@@ -130,7 +178,7 @@ export default function Summary() {
       ) {
         setShowSuggestions(false);
       }
-    };  
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -144,7 +192,7 @@ export default function Summary() {
       setMessages([
         {
           id: "1",
-          content: "Hello! How can I help you with your finances today?",
+          content: "Hello! I'm your AI financial assistant. I can help you with budget tracking, spending analysis, and financial planning. Try asking me about your monthly budget or how much money you have left this month!",
           sender: "other",
           timestamp: new Date(),
         },
@@ -238,7 +286,7 @@ export default function Summary() {
             transition={{ delay: 0.2 }}
           >
             {/* Placeholder Widget 1 - Chat Box */}
-            <div className="bg-gray-50 rounded-2xl p-0 border border-gray-100">
+            <div className="">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-800">
                   Clanker Chat
@@ -253,28 +301,25 @@ export default function Summary() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className={`flex ${
-                        message.sender === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
+                      className={`flex ${message.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                        }`}
                     >
                       <div
-                        className={`max-w-[80%] p-5 rounded-3xl ${
-                          message.sender === "user"
-                            ? "bg-blue-700 text-white rounded-br-md"
-                            : "bg-gray-100 text-gray-800 rounded-bl-md"
-                        }`}
+                        className={`max-w-[80%] p-5 rounded-3xl ${message.sender === "user"
+                          ? "bg-blue-700 text-white rounded-br-md"
+                          : "bg-gray-100 text-gray-800 rounded-bl-md"
+                          }`}
                       >
                         <div className="text-sm font-bold">
                           {message.content}
                         </div>
                         <div
-                          className={`text-xs mt-1 opacity-70 ${
-                            message.sender === "user"
-                              ? "text-blue-100"
-                              : "text-gray-500"
-                          }`}
+                          className={`text-xs mt-1 opacity-70 ${message.sender === "user"
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                            }`}
                         >
                           {message.timestamp.toLocaleTimeString([], {
                             hour: "2-digit",
@@ -294,25 +339,54 @@ export default function Summary() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === "Enter" && input.trim()) {
+                    if (e.key === "Enter" && input.trim() && !isProcessing) {
                       processUserMessage(input.trim());
                     }
                   }}
-                  placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={isProcessing ? "AI is thinking..." : "Type your message..."}
+                  disabled={isProcessing}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={() => {
-                    if (input.trim()) {
+                    if (input.trim() && !isProcessing) {
                       processUserMessage(input.trim());
                     }
                   }}
-                  className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  disabled={isProcessing}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <SendHorizonal />
+                  {isProcessing ? "Processing..." : <SendHorizonal />}
                 </button>
               </div>
             </div>
+
+            {/* Budget Widget Display */}
+            {budgetWidget && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="relative"
+              >
+                <button
+                  onClick={() => setBudgetWidget(null)}
+                  className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10"
+                  title="Close widget"
+                >
+                  <span className="text-gray-600 text-sm">×</span>
+                </button>
+                <MonthlyBudgetWidget
+                  month={budgetWidget.data.month}
+                  year={budgetWidget.data.year}
+                  totalBudget={budgetWidget.data.totalBudget}
+                  totalSpent={budgetWidget.data.totalSpent}
+                  categories={budgetWidget.data.categories}
+                  savingsGoal={budgetWidget.data.savingsGoal}
+                  savingsCurrent={budgetWidget.data.savingsCurrent}
+                />
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Permanent Grainy Gradient Ellipse Background 
@@ -349,9 +423,8 @@ export default function Summary() {
 
           {/* Bottom Chat Interface */}
           <div
-            className={`fixed bottom-0 left-0 right-0 p-4 transition-all duration-300 ease-out z-10 ${
-              showSuggestions ? "bg-transparent" : "bg-transparent"
-            }`}
+            className={`fixed bottom-0 left-0 right-0 p-4 transition-all duration-300 ease-out z-10 ${showSuggestions ? "bg-transparent" : "bg-transparent"
+              }`}
           >
             <div className="max-w-sm mx-auto space-y-3" ref={chatContainerRef}>
               <AnimatePresence>
@@ -378,10 +451,11 @@ export default function Summary() {
                       animate="visible"
                     >
                       {[
-                        { icon: Coffee, text: "Show me my coffee spending" },
-                        { icon: BarChart3, text: "Weekly spending breakdown" },
-                        { icon: Home, text: "How's my savings goal?" },
-                        { icon: CreditCard, text: "Recent transactions" },
+                        { icon: BarChart3, text: "How much money do I have left this month?" },
+                        { icon: Coffee, text: "Show me my monthly budget overview" },
+                        { icon: BarChart3, text: "Am I on track with my budget?" },
+                        { icon: Home, text: "What's my spending status?" },
+                        { icon: CreditCard, text: "How much have I spent so far?" },
                       ].map((suggestion, index) => (
                         <motion.div key={index} variants={itemVariants}>
                           <Button
@@ -499,9 +573,8 @@ export default function Summary() {
                             <p className="font-semibold text-gray-900">{transaction.name}</p>
                             <p className="text-sm text-gray-600">{transaction.date} • {transaction.category}</p>
                           </div>
-                          <p className={`font-bold ${
-                            transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
-                          }`}>
+                          <p className={`font-bold ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-600"
+                            }`}>
                             {transaction.amount}
                           </p>
                         </motion.div>

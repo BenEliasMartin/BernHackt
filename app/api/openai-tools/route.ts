@@ -10,6 +10,68 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "generateMonthlyBudgetWidget",
+      description: "Generate a monthly budget widget with spending categories and progress tracking",
+      parameters: {
+        type: "object",
+        properties: {
+          month: {
+            type: "string",
+            description: "Month name (e.g., 'January', 'February')",
+          },
+          year: {
+            type: "number",
+            description: "Year (e.g., 2024)",
+          },
+          totalBudget: {
+            type: "number",
+            description: "Total monthly budget amount",
+          },
+          totalSpent: {
+            type: "number",
+            description: "Total amount spent so far this month",
+          },
+          categories: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description: "Category name (e.g., 'Food', 'Transportation')",
+                },
+                allocated: {
+                  type: "number",
+                  description: "Budget allocated for this category",
+                },
+                spent: {
+                  type: "number",
+                  description: "Amount spent in this category",
+                },
+                color: {
+                  type: "string",
+                  description: "CSS color class for the progress bar (e.g., 'bg-blue-500')",
+                },
+              },
+              required: ["name", "allocated", "spent", "color"],
+            },
+          },
+          savingsGoal: {
+            type: "number",
+            description: "Monthly savings goal amount (optional)",
+          },
+          savingsCurrent: {
+            type: "number",
+            description: "Current savings amount for this month (optional)",
+          },
+        },
+        required: ["month", "year", "totalBudget", "totalSpent", "categories"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "calculateCompoundInterest",
       description: "Calculate compound interest for investment planning",
       parameters: {
@@ -95,6 +157,16 @@ async function executeToolCall(
     const parsedArgs = JSON.parse(args);
 
     switch (name) {
+      case "generateMonthlyBudgetWidget":
+        return generateMonthlyBudgetWidget(
+          parsedArgs.month,
+          parsedArgs.year,
+          parsedArgs.totalBudget,
+          parsedArgs.totalSpent,
+          parsedArgs.categories,
+          parsedArgs.savingsGoal,
+          parsedArgs.savingsCurrent
+        );
       case "calculateCompoundInterest":
         return calculateCompoundInterest(
           parsedArgs.principal,
@@ -116,6 +188,33 @@ async function executeToolCall(
     }
   }
   throw new Error('Invalid tool call type');
+}
+
+// Widget generation functions
+function generateMonthlyBudgetWidget(
+  month: string,
+  year: number,
+  totalBudget: number,
+  totalSpent: number,
+  categories: any[],
+  savingsGoal?: number,
+  savingsCurrent?: number
+): any {
+  return {
+    type: "monthlyBudgetWidget",
+    data: {
+      month,
+      year,
+      totalBudget,
+      totalSpent,
+      categories,
+      savingsGoal: savingsGoal || 0,
+      savingsCurrent: savingsCurrent || 0,
+      remaining: totalBudget - totalSpent,
+      spentPercentage: (totalSpent / totalBudget) * 100
+    },
+    message: `Generated monthly budget widget for ${month} ${year}. Total budget: $${totalBudget.toLocaleString()}, spent: $${totalSpent.toLocaleString()}, remaining: $${(totalBudget - totalSpent).toLocaleString()}.`
+  };
 }
 
 // Financial calculation functions
