@@ -7,6 +7,8 @@ import { VoiceInput } from "./VoiceInput";
 import { VoiceOutput } from "./VoiceOutput";
 import { useVoice } from "@/contexts/VoiceContext";
 import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
+import dynamic from 'next/dynamic';
+const Spline = dynamic(() => import('@splinetool/react-spline'), { ssr: false });
 
 interface VoiceModeProps {
     isActive: boolean;
@@ -168,6 +170,11 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
                     <div className="min-h-screen bg-white">
                         <div className="max-w-md mx-auto p-6">
                             {/* Header */}
+                            <div style={{ height: '20vh' }}>
+                                <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
+                            </div>
+
+
                             <motion.div
                                 className="pt-8 pb-6 flex items-center justify-between"
                                 initial={{ opacity: 0, y: -20 }}

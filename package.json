@@ -13,10 +13,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@specy/liquid-glass-react": "^1.0.2",
     "@splinetool/react-spline": "^4.1.0",
-<<<<<<< HEAD
-=======
     "@splinetool/runtime": "^1.10.51",
->>>>>>> 58f19a684d22525aff32b93658246ce704277952
     "animated-backgrounds": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
