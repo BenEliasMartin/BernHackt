@@ -42,46 +42,46 @@ const ANIMATION_CONFIG = {
 
 const steps = [
   {
-    title: "Hi Alex, I'm your financial guardian",
-    subtitle: "Track effortlessly • Save intelligently • Achieve more",
+    title: "Hallo Alex, ich bin dein finanzieller Begleiter",
+    subtitle: "Einfach verfolgen • Intelligent sparen • Mehr erreichen",
     description: "",
   },
   {
-    title: "Alex, what's your money situation?",
-    subtitle: "Choose an example that resonates with you",
+    title: "Alex, wie ist deine finanzielle Situation?",
+    subtitle: "Wähle ein Beispiel, das zu dir passt",
     description: "",
   },
   {
-    title: "How do you prefer your financial updates?",
+    title: "Wie möchtest du deine Finanzupdates erhalten?",
     subtitle: "",
     description: "",
   },
   {
-    title: "Alex, let's budget so Japan becomes real.",
-    subtitle: "To reach your goal faster, which sacrifice feels easiest?",
+    title: "Alex, lass uns budgetieren, damit Japan Wirklichkeit wird.",
+    subtitle: "Was fällt dir am leichtesten, um dein Ziel schneller zu erreichen?",
     description: "",
   },
 ]
 
-const loadingSteps = ["Accessing PostFinance systems", "Reading 90 days of behavior", "Building your financial model"]
+const loadingSteps = ["Zugriff auf PostFinance-Systeme", "Lese die letzten 90 Tage Verhalten", "Erstelle dein Finanzmodell"]
 
 const dailyOptions = [
-  { id: "morning-podcast", label: "Morning podcast", duration: "2 min", icon: Headphones },
-  { id: "visual-dashboard", label: "Visual dashboard", duration: null, icon: BarChart3 },
-  { id: "quick-notification", label: "Quick notification", duration: null, icon: Bell },
-  { id: "voice-summary", label: "Voice summary", duration: null, icon: Volume2 },
+  { id: "morning-podcast", label: "Morgendlicher Podcast", duration: "2 Min", icon: Headphones },
+  { id: "visual-dashboard", label: "Visuelles Dashboard", duration: null, icon: BarChart3 },
+  { id: "quick-notification", label: "Schnelle Benachrichtigung", duration: null, icon: Bell },
+  { id: "voice-summary", label: "Sprachzusammenfassung", duration: null, icon: Volume2 },
 ]
 
 const weeklyOptions = [
-  { id: "spotify-video", label: "Spotify-style video", duration: null, icon: Video },
-  { id: "animated-insights", label: "Animated insights", duration: null, icon: Sparkles },
-  { id: "detailed-report", label: "Detailed report", duration: null, icon: FileText },
+  { id: "spotify-video", label: "Spotify-ähnliches Video", duration: null, icon: Video },
+  { id: "animated-insights", label: "Animierte Einblicke", duration: null, icon: Sparkles },
+  { id: "detailed-report", label: "Detaillierter Bericht", duration: null, icon: FileText },
 ]
 
 const budgetOptions = [
-  { id: "starbucks", label: "Give up three Starbucks a week", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
-  { id: "subscriptions", label: "Cancel Netflix, Adobe, and Gym", savings: "CHF 144", icon: Tv, color: "#E50914" },
-  { id: "dinner", label: "Skip one dinner out per weekend", savings: "CHF 130", icon: Utensils, color: "#FF6B35" },
+  { id: "starbucks", label: "Verzichte dreimal pro Woche auf Starbucks", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
+  { id: "subscriptions", label: "Kündige Netflix, Adobe und das Fitnessstudio", savings: "CHF 144", icon: Tv, color: "#E50914" },
+  { id: "dinner", label: "Lass einmal pro Woche das Auswärtsessen weg", savings: "CHF 130", icon: Utensils, color: "#FF6B35" },
 ]
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
@@ -565,8 +565,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8 }}
                       >
-                        {isListening ? "Listening... speak now" : "Tap to speak"}
-                        {!isVoiceEnabled && <span className="text-red-500"> (Voice disabled)</span>}
+                        {isListening ? "Höre zu... sprich jetzt" : "Zum Sprechen tippen"}
+                        {!isVoiceEnabled && <span className="text-red-500"> (Spracheingabe deaktiviert)</span>}
                       </motion.p>
                     )}
 
@@ -675,7 +675,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     >
                       <div className="text-center">
                         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Daily Updates
+                          Tägliche Updates
                         </h3>
 
                         <motion.div
@@ -874,7 +874,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     >
                       <div className="text-center">
                         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Weekly Recap
+                          Wochenrückblick
                         </h3>
                         <div className="space-y-3">
                           {weeklyOptions.map((option, index) => {
@@ -1025,7 +1025,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       transition={{ delay: 1.2 }}
                     >
                       <p className="text-base text-slate-500 font-medium font-[Satoshi]">
-                        Any one of these gets you to Japan in ~3 months.
+                        Jede dieser Optionen bringt dich in ~3 Monaten nach Japan.
                       </p>
                     </motion.div>
                   </motion.div>
@@ -1093,7 +1093,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
                       }`}
                   >
-                    {isLastStep ? "Start Dashboard" : "Continue"}
+                    {isLastStep ? "Dashboard starten" : "Weiter"}
                     <motion.div
                       animate={canContinue ? { x: [0, 4, 0] } : {}}
                       transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
@@ -1111,7 +1111,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={handleSkip}
                     className="w-full text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-sm rounded-xl h-12 transition-all duration-200"
                   >
-                    Skip for now
+                    Jetzt überspringen
                   </Button>
                 </motion.div>
               )}
