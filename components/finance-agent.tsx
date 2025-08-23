@@ -321,9 +321,6 @@ export function FinanceAgent() {
                           variant="ghost"
                           className="w-full justify-start gap-4 h-auto p-4 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl border-0"
                           onClick={() => handleSuggestionClick(suggestion.text)}
-                          whileHover={{ scale: 1.02, x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                          transition={ANIMATION_CONFIG.springSoft}
                         >
                           <suggestion.icon className="h-4 w-4 text-gray-500" />
                           <span className="text-gray-900 text-sm font-medium">{suggestion.text}</span>

@@ -123,3 +123,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+.viewport-wrapper {
+  @apply h-screen;
+  @apply w-[calc(100%-400px)];
+  @apply max-w-md mx-auto p-6 space-y-8;
+}
