@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@specy/liquid-glass-react": "^1.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "geist": "^1.4.2",
+    "liquid-glass-react": "^1.1.1",
     "lucide-react": "^0.541.0",
     "next": "15.2.4",
     "react": "^19.0.0",

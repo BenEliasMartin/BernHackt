@@ -1,10 +1,6 @@
 "use client"
-import { FinanceAgent } from "@/components/finance-agent"
+import { AppLayout } from "@/components/app-layout"
 
 export default function HomePage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <FinanceAgent />
-    </div>
-  )
+  return <AppLayout />
 }

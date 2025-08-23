@@ -286,11 +286,9 @@ export function FinanceAgent() {
           <div className="space-y-6">{widgets.map(renderWidget)}</div>
         </AnimatePresence>
 
-        <div
-          className={`fixed bottom-0 left-0 right-0 p-6 transition-all duration-300 ease-out ${
-            showSuggestions ? "bg-white/95 backdrop-blur-sm" : "bg-transparent"
-          }`}
-        >
+
+
+        <div className="mb-32">
           <div className="max-w-md mx-auto space-y-4" ref={chatContainerRef}>
             <AnimatePresence>
               {showSuggestions && (
@@ -317,23 +315,27 @@ export function FinanceAgent() {
                       { icon: CreditCard, text: "Show me my debt paydown plan" },
                     ].map((suggestion, index) => (
                       <motion.div key={index} variants={itemVariants}>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start gap-4 h-auto p-4 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl border-0"
-                          onClick={() => handleSuggestionClick(suggestion.text)}
+                        <motion.div
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
                           transition={ANIMATION_CONFIG.springSoft}
                         >
-                          <suggestion.icon className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-900 text-sm font-medium">{suggestion.text}</span>
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-4 h-auto p-4 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl border-0"
+                            onClick={() => handleSuggestionClick(suggestion.text)}
+                          >
+                            <suggestion.icon className="h-4 w-4 text-gray-500" />
+                            <span className="text-gray-900 text-sm font-medium">{suggestion.text}</span>
+                          </Button>
+                        </motion.div>
                       </motion.div>
                     ))}
                   </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
+
 
             <motion.div
               className="flex gap-3"
@@ -363,9 +365,8 @@ export function FinanceAgent() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsListening(!isListening)}
-                  className={`rounded-full h-14 w-14 transition-all duration-200 ease-out ${
-                    isListening ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                  }`}
+                  className={`rounded-full h-14 w-14 transition-all duration-200 ease-out ${isListening ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                    }`}
                 >
                   <Mic className="h-5 w-5" />
                 </Button>
@@ -375,19 +376,25 @@ export function FinanceAgent() {
                 whileTap={{ scale: 0.95 }}
                 transition={ANIMATION_CONFIG.springSoft}
               >
-                <Button
-                  onClick={handleChatButtonClick}
-                  className="rounded-full h-14 w-14 bg-gray-900 text-white hover:bg-gray-800"
-                  size="icon"
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={ANIMATION_CONFIG.springSoft}
                 >
-                  <MessageCircle className="h-5 w-5" />
-                </Button>
+                  <Button
+                    onClick={handleChatButtonClick}
+                    className="rounded-full h-14 w-14 bg-gray-900 text-white hover:bg-gray-800"
+                    size="icon"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                  </Button>
+                </motion.div>
               </motion.div>
             </motion.div>
           </div>
         </div>
 
-        <div className="h-40"></div>
+        <div className="h-20"></div>
       </div>
     </div>
   )
