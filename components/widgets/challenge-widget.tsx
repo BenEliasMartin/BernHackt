@@ -112,7 +112,7 @@ export function ChallengeWidget() {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-xl font-extralight text-gray-900 mb-4">Challenges</h2>
+      <h2 className="text-xl font-extralight text-gray-900 mb-4">Herausforderungen</h2>
 
       {/* Coffee Savings Challenge */}
       <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
@@ -125,7 +125,7 @@ export function ChallengeWidget() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-base font-extralight text-gray-900">Coffee Savings Challenge</h3>
+            <h3 className="text-base font-extralight text-gray-900">Kaffee-Spar-Herausforderung</h3>
           </div>
           <ChevronUp
             className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${
@@ -138,9 +138,9 @@ export function ChallengeWidget() {
           <div className="px-4 pb-4 space-y-4 border-t border-gray-50">
             <div className="pt-4">
               <p className="text-sm text-gray-600 leading-relaxed font-extralight">
-                You've bought coffee at <span className="text-gray-900">Starbucks Zürich HB</span> for the last 3 days.
-                There's a local café <span className="text-gray-900">Café Central</span> just 100m away that serves
-                coffee for CHF 3.50 less per cup.
+                Sie haben in den letzten 3 Tagen Kaffee bei <span className="text-gray-900">Starbucks Zürich HB</span> gekauft.
+                Es gibt ein lokales Café, das <span className="text-gray-900">Café Central</span>, nur 100m entfernt, das
+                Kaffee für 3.50 CHF weniger pro Tasse anbietet.
               </p>
             </div>
 
@@ -148,7 +148,7 @@ export function ChallengeWidget() {
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-gray-900 rounded-full"></div>
-                  <span>Current location</span>
+                  <span>Aktueller Standort</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
@@ -163,7 +163,7 @@ export function ChallengeWidget() {
             <div className="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
               <div className="flex items-center gap-2">
                 <MapPin className="h-3 w-3" />
-                <span>Café Central - 2 min walk</span>
+                <span>Café Central - 2 Min. Fussweg</span>
               </div>
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-400 fill-current" />
@@ -173,7 +173,7 @@ export function ChallengeWidget() {
 
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-700 font-extralight">
-                Potential savings: <span className="text-gray-900">CHF 17.50/week</span>
+                Mögliche Ersparnis: <span className="text-gray-900">17.50 CHF/Woche</span>
               </p>
             </div>
           </div>
@@ -194,7 +194,7 @@ export function ChallengeWidget() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-base font-extralight text-gray-900">Smart Shopping Challenge</h3>
+            <h3 className="text-base font-extralight text-gray-900">Clevere Einkaufs-Herausforderung</h3>
           </div>
           <ChevronUp
             className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${
@@ -207,24 +207,24 @@ export function ChallengeWidget() {
           <div className="px-4 pb-4 space-y-4 border-t border-gray-50">
             <div className="pt-4">
               <p className="text-sm text-gray-600 leading-relaxed font-extralight">
-                Your average grocery spending at <span className="text-gray-900">Migros</span> is{" "}
-                <span className="text-gray-900">CHF 120/week</span>. Try to save CHF 30 on your next shopping trip.
+                Ihre durchschnittlichen Lebensmittelausgaben bei <span className="text-gray-900">Migros</span> betragen{" "}
+                <span className="text-gray-900">120 CHF/Woche</span>. Versuchen Sie, beim nächsten Einkauf 30 CHF zu sparen.
               </p>
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs text-gray-500 mb-2">Money-saving tips:</div>
+              <div className="text-xs text-gray-500 mb-2">Geldspartipps:</div>
               <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                <div className="bg-gray-50 rounded p-2">M-Budget products</div>
-                <div className="bg-gray-50 rounded p-2">Weekly promotions</div>
-                <div className="bg-gray-50 rounded p-2">Seasonal produce</div>
-                <div className="bg-gray-50 rounded p-2">Cumulus points</div>
+                <div className="bg-gray-50 rounded p-2">M-Budget Produkte</div>
+                <div className="bg-gray-50 rounded p-2">Wöchentliche Aktionen</div>
+                <div className="bg-gray-50 rounded p-2">Saisonale Produkte</div>
+                <div className="bg-gray-50 rounded p-2">Cumulus-Punkte</div>
               </div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-700 font-extralight">
-                Target savings: <span className="text-gray-900">CHF 30/week</span>
+                Zielersparnis: <span className="text-gray-900">30 CHF/Woche</span>
               </p>
             </div>
           </div>

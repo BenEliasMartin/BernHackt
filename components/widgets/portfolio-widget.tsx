@@ -16,13 +16,13 @@ export function PortfolioWidget() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-            Portfolio
+            Depot
           </h3>
           <div className="text-right">
             <div className="text-xl font-bold">CHF {totalValue.toLocaleString()}</div>
             <div className="text-sm text-accent flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              +2.3%
+              +2,3%
             </div>
           </div>
         </div>
@@ -32,7 +32,7 @@ export function PortfolioWidget() {
             <div key={holding.symbol} className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-sm">{holding.symbol}</div>
-                <div className="text-xs text-muted-foreground">{holding.shares} shares</div>
+                <div className="text-xs text-muted-foreground">{holding.shares} Anteile</div>
               </div>
               <div className="text-right">
                 <div className="font-semibold">CHF {holding.value.toLocaleString()}</div>

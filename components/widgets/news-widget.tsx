@@ -28,11 +28,11 @@ type NewsItem = {
 
 // --- Example data (replace with real feed)
 const newsItems: NewsItem[] = [
-  { id: 1, title: "Swiss National Bank Holds Interest Rates Steady", summary: "SNB maintains policy rate at 1.75% amid inflation concerns and global economic uncertainty.", time: "2 hours ago", category: "Central Banking", impact: "neutral", icon: DollarSign },
-  { id: 2, title: "Tech Stocks Rally on AI Optimism", summary: "Major technology companies see significant gains as investors bet on artificial intelligence growth.", time: "4 hours ago", category: "Markets", impact: "positive", icon: TrendingUp },
-  { id: 3, title: "European Markets Mixed on Energy Concerns", summary: "Energy sector volatility continues to impact European indices amid geopolitical tensions.", time: "6 hours ago", category: "Markets", impact: "negative", icon: TrendingDown },
-  { id: 4, title: "Cryptocurrency Regulation Updates", summary: "New regulatory framework for digital assets expected to impact trading volumes significantly.", time: "8 hours ago", category: "Crypto", impact: "neutral", icon: AlertCircle },
-  { id: 5, title: "Swiss Franc Strengthens Against Euro", summary: "CHF gains ground as safe-haven demand increases amid global market uncertainty.", time: "12 hours ago", category: "Currency", impact: "positive", icon: TrendingUp },
+  { id: 1, title: "Schweizer Nationalbank hält Leitzins stabil", summary: "Die SNB hält den Leitzins bei 1,75 % angesichts von Inflationssorgen und globaler wirtschaftlicher Unsicherheit.", time: "Vor 2 Stunden", category: "Zentralbanken", impact: "neutral", icon: DollarSign },
+  { id: 2, title: "Technologieaktien legen dank KI-Optimismus zu", summary: "Große Technologieunternehmen verzeichnen deutliche Gewinne, da Anleger auf das Wachstum der künstlichen Intelligenz setzen.", time: "Vor 4 Stunden", category: "Märkte", impact: "positive", icon: TrendingUp },
+  { id: 3, title: "Europäische Börsen uneinheitlich wegen Energiesorgen", summary: "Die Volatilität im Energiesektor beeinflusst weiterhin die europäischen Indizes angesichts geopolitischer Spannungen.", time: "Vor 6 Stunden", category: "Märkte", impact: "negative", icon: TrendingDown },
+  { id: 4, title: "Aktualisierungen zur Kryptowährungsregulierung", summary: "Neuer regulatorischer Rahmen für digitale Vermögenswerte dürfte die Handelsvolumina erheblich beeinflussen.", time: "Vor 8 Stunden", category: "Krypto", impact: "neutral", icon: AlertCircle },
+  { id: 5, title: "Schweizer Franken gewinnt gegenüber dem Euro", summary: "Der CHF gewinnt an Stärke, da die Nachfrage nach sicheren Häfen angesichts der globalen Marktunsicherheit zunimmt.", time: "Vor 12 Stunden", category: "Währung", impact: "positive", icon: TrendingUp },
 ]
 
 // --- Config
@@ -142,9 +142,9 @@ export function NewsWidget() {
         <div className="flex items-center gap-3">
           <Globe className="h-5 w-5 text-gray-600" />
           <div className="flex-1">
-            <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Financial News</h3>
+            <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Finanznachrichten</h3>
             <div className="text-xs text-gray-500 font-light">
-              {filteredNews.length} updates today
+              {filteredNews.length} Aktualisierungen heute
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ export function NewsWidget() {
         {/* Category Filter */}
         <div className="flex gap-2 flex-wrap pb-2">
           {categories.map((category) => {
-            const active = selectedCategory === category || (selectedCategory === null && category === "All")
+            const active = selectedCategory === category || (selectedCategory === null && category === "Alle")
             return (
               <button
                 key={category}
@@ -205,8 +205,8 @@ export function NewsWidget() {
             >
               <span>
                 {extraItems.some(item => expandedItems.has(item.id))
-                  ? "Show less"
-                  : `Show ${extraItems.length} more updates`}
+                  ? "Weniger anzeigen"
+                  : `${extraItems.length} weitere Meldungen anzeigen`}
               </span>
               <ChevronDown
                 className={`h-3 w-3 transition-transform duration-200 ${extraItems.some(item => expandedItems.has(item.id)) ? "rotate-180" : ""
