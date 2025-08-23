@@ -10,20 +10,55 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "makeDashboard",
-      description: "Make a dashboard for the user",
+      name: "calculateCompoundInterest",
+      description: "Calculate compound interest for investment planning",
       parameters: {
         type: "object",
         properties: {
-          layout: {
+          principal: {
+            type: "number",
+            description: "Initial investment amount",
+          },
+          rate: {
+            type: "number",
+            description: "Annual interest rate as a percentage (e.g., 7 for 7%)",
+          },
+          time: {
+            type: "number",
+            description: "Investment time period in years",
+          },
+          compoundFrequency: {
             type: "string",
-            required: true,
-            description:
-              "Sequence of characters symbolizing the dashboard setup",
-            //e.g. [#@!m3]
+            enum: ["annually", "semi-annually", "quarterly", "monthly", "daily"],
+            description: "How often interest is compounded",
           },
         },
-        required: ["layout"],
+        required: ["principal", "rate", "time"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "calculateMonthlyPayment",
+      description: "Calculate monthly payment for loans or mortgages",
+      parameters: {
+        type: "object",
+        properties: {
+          principal: {
+            type: "number",
+            description: "Loan amount",
+          },
+          rate: {
+            type: "number",
+            description: "Annual interest rate as a percentage",
+          },
+          years: {
+            type: "number",
+            description: "Loan term in years",
+          },
+        },
+        required: ["principal", "rate", "years"],
       },
     },
   },
@@ -55,24 +90,100 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 async function executeToolCall(
   toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
 ) {
-  const { name, arguments: args } = toolCall.function;
-  const parsedArgs = JSON.parse(args);
+  if (toolCall.type === 'function') {
+    const { name, arguments: args } = toolCall.function;
+    const parsedArgs = JSON.parse(args);
 
-  switch (name) {
-    case "get_weather_data":
-      return await getWeatherData(parsedArgs.location, parsedArgs.units);
-    default:
-      throw new Error(`Unknown tool: ${name}`);
+    switch (name) {
+      case "calculateCompoundInterest":
+        return calculateCompoundInterest(
+          parsedArgs.principal,
+          parsedArgs.rate,
+          parsedArgs.time,
+          parsedArgs.compoundFrequency || 'annually'
+        );
+      case "calculateMonthlyPayment":
+        return calculateMonthlyPayment(
+          parsedArgs.principal,
+          parsedArgs.rate,
+          parsedArgs.years
+        );
+      case "get_weather_data":
+        // Placeholder for weather data function
+        return { location: parsedArgs.location, units: parsedArgs.units, temperature: "22°C", condition: "Sunny" };
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
   }
+  throw new Error('Invalid tool call type');
 }
-  /**
-   * Handle POST requests to the OpenAI API with custom tools.
-   *
-   * @param {NextRequest} request - The request object.
-   * @returns {Promise<NextResponse>} - The response object.
-   *
-   * The endpoint expects the following JSON payload:
-   * 
+
+// Financial calculation functions
+function calculateCompoundInterest(
+  principal: number,
+  rate: number,
+  time: number,
+  compoundFrequency: string = 'annually'
+): any {
+  const r = rate / 100;
+  let n: number;
+
+  switch (compoundFrequency) {
+    case 'annually': n = 1; break;
+    case 'semi-annually': n = 2; break;
+    case 'quarterly': n = 4; break;
+    case 'monthly': n = 12; break;
+    case 'daily': n = 365; break;
+    default: n = 1;
+  }
+
+  const amount = principal * Math.pow(1 + r / n, n * time);
+  const interest = amount - principal;
+
+  return {
+    principal,
+    rate: rate + '%',
+    time: time + ' years',
+    compoundFrequency,
+    finalAmount: Math.round(amount * 100) / 100,
+    interestEarned: Math.round(interest * 100) / 100
+  };
+}
+
+function calculateMonthlyPayment(
+  principal: number,
+  rate: number,
+  years: number
+): any {
+  const monthlyRate = (rate / 100) / 12;
+  const numberOfPayments = years * 12;
+
+  if (monthlyRate === 0) {
+    return { monthlyPayment: principal / numberOfPayments };
+  }
+
+  const monthlyPayment = principal *
+    (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+    (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+
+  return {
+    principal,
+    annualRate: rate + '%',
+    term: years + ' years',
+    monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+    totalPayments: Math.round(monthlyPayment * numberOfPayments * 100) / 100,
+    totalInterest: Math.round((monthlyPayment * numberOfPayments - principal) * 100) / 100
+  };
+}
+/**
+ * Handle POST requests to the OpenAI API with custom tools.
+ *
+ * @param {NextRequest} request - The request object.
+ * @returns {Promise<NextResponse>} - The response object.
+ *
+ * The endpoint expects the following JSON payload:
+ * 
+ */
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -123,14 +234,14 @@ export async function POST(request: NextRequest) {
             };
           } catch (error) {
             console.error(
-              `Error executing tool ${toolCall.function.name}:`,
+              `Error executing tool ${toolCall.type === 'function' ? toolCall.function.name : 'unknown'}:`,
               error
             );
             return {
               tool_call_id: toolCall.id,
               role: "tool" as const,
               content: JSON.stringify({
-                error: `Failed to execute ${toolCall.function.name}: ${error instanceof Error ? error.message : "Unknown error"
+                error: `Failed to execute tool: ${error instanceof Error ? error.message : "Unknown error"
                   }`,
               }),
             };
