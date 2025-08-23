@@ -6,17 +6,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ChevronRight,
   Mic,
-  BarChart3,
-  Bell,
-  Volume2,
-  Headphones,
-  Video,
-  Sparkles,
-  FileText,
   Coffee,
   Tv,
   Utensils,
-  ChevronLeft,
 } from "lucide-react"
 import Spline from "@splinetool/react-spline"
 import { useVoice } from "@/contexts/VoiceContext"
@@ -42,18 +34,13 @@ const ANIMATION_CONFIG = {
 
 const steps = [
   {
-    title: "Hi Alex, I'm your financial guardian",
+    title: "Hi Alex, I'm your\nfinancial guardian",
     subtitle: "Track effortlessly • Save intelligently • Achieve more",
     description: "",
   },
   {
-    title: "Alex, what's your money situation?",
+    title: "Alex, what's your\nmoney situation?",
     subtitle: "Choose an example that resonates with you",
-    description: "",
-  },
-  {
-    title: "How do you prefer your financial updates?",
-    subtitle: "",
     description: "",
   },
   {
@@ -65,19 +52,6 @@ const steps = [
 
 const loadingSteps = ["Accessing PostFinance systems", "Reading 90 days of behavior", "Building your financial model"]
 
-const dailyOptions = [
-  { id: "morning-podcast", label: "Morning podcast", duration: "2 min", icon: Headphones },
-  { id: "visual-dashboard", label: "Visual dashboard", duration: null, icon: BarChart3 },
-  { id: "quick-notification", label: "Quick notification", duration: null, icon: Bell },
-  { id: "voice-summary", label: "Voice summary", duration: null, icon: Volume2 },
-]
-
-const weeklyOptions = [
-  { id: "spotify-video", label: "Spotify-style video", duration: null, icon: Video },
-  { id: "animated-insights", label: "Animated insights", duration: null, icon: Sparkles },
-  { id: "detailed-report", label: "Detailed report", duration: null, icon: FileText },
-]
-
 const budgetOptions = [
   { id: "starbucks", label: "Give up three Starbucks a week", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
   { id: "subscriptions", label: "Cancel Netflix, Adobe, and Gym", savings: "CHF 144", icon: Tv, color: "#E50914" },
@@ -86,11 +60,8 @@ const budgetOptions = [
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedDaily, setSelectedDaily] = useState<string>("")
-  const [selectedWeekly, setSelectedWeekly] = useState<string>("")
   const [selectedBudget, setSelectedBudget] = useState<string>("")
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0)
-  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0)
 
   const [isSplineLoaded, setIsSplineLoaded] = useState(false)
   const [activeLoadingStep, setActiveLoadingStep] = useState(-1)
@@ -147,16 +118,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }, [currentStep])
 
-  useEffect(() => {
-    if (currentStep === 2) {
-      const interval = setInterval(() => {
-        setCurrentCarouselIndex((prev) => (prev + 1) % dailyOptions.length)
-      }, 3000)
-
-      return () => clearInterval(interval)
-    }
-  }, [currentStep])
-
   // Clear transcribed text when moving to next question
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -182,28 +143,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleScenarioSelect = (scenarioId: number) => {
     setSelectedScenario(scenarioId)
-  }
-
-  const handleDailySelect = (optionId: string) => {
-    setSelectedDaily(optionId)
-    const index = dailyOptions.findIndex((option) => option.id === optionId)
-    setCurrentCarouselIndex(index)
-  }
-
-  const goToPrevious = () => {
-    const newIndex = currentCarouselIndex === 0 ? dailyOptions.length - 1 : currentCarouselIndex - 1
-    setCurrentCarouselIndex(newIndex)
-    setSelectedDaily(dailyOptions[newIndex].id)
-  }
-
-  const goToNext = () => {
-    const newIndex = (currentCarouselIndex + 1) % dailyOptions.length
-    setCurrentCarouselIndex(newIndex)
-    setSelectedDaily(dailyOptions[newIndex].id)
-  }
-
-  const handleWeeklySelect = (optionId: string) => {
-    setSelectedWeekly(optionId)
   }
 
   const handleBudgetSelect = (optionId: string) => {
@@ -259,7 +198,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const currentStepData = steps[currentStep]
   const isLastStep = currentStep === steps.length - 1
-  const canContinue = currentStep !== 2 || (selectedDaily && selectedWeekly) || (currentStep == 2 && selectedBudget)
+  const canContinue = currentStep !== 2 || selectedBudget
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6 overflow-hidden">
@@ -273,7 +212,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -30, scale: 0.95 }}
             transition={ANIMATION_CONFIG.spring}
-            className="text-center space-y-12"
+            className="text-center space-y-6"
           >
             <motion.div
               className="flex justify-center relative"
@@ -308,7 +247,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </motion.div>
 
             <motion.div
-              className="space-y-6"
+              className="space-y-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -317,9 +256,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 ease: ANIMATION_CONFIG.easing,
               }}
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <motion.h1
-                  className="text-3xl font-bold text-slate-900 tracking-tight leading-tight font-[Satoshi]"
+                  className="text-3xl font-bold text-slate-900 tracking-tighter leading-tight font-sans whitespace-pre-line"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
@@ -388,7 +327,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                           </motion.div>
 
                           <motion.span
-                            className="text-base font-medium text-slate-800 tracking-tight font-[Satoshi]"
+                            className="text-base font-medium text-slate-800 tracking-tighter font-sans"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3, duration: 0.6 }}
@@ -426,119 +365,178 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </motion.div>
                 ) : currentStep === 1 ? (
                   <motion.div
-                    className="space-y-8 mt-8"
+                    className="space-y-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                   >
-                    {!showVoiceInput && (
+                    <motion.div
+                      className="space-y-3 text-left max-w-md mx-auto"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
                       <motion.div
-                        className="flex justify-center"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ delay: 0.6, duration: 0.6 }}
+                        className="text-center mb-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                      >
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Examples</p>
+                      </motion.div>
+
+                      <motion.div
+                        className="space-y-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
                       >
                         <motion.div
-                          className="relative cursor-pointer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={startVoiceRecording}
+                          className="flex justify-start"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.9, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                         >
-                          <motion.div
-                            className="absolute inset-0 rounded-full bg-slate-900/10"
-                            animate={
-                              isMicActive
-                                ? {
-                                  scale: [1, 1.4, 1],
-                                  opacity: [0.3, 0, 0.3],
-                                }
-                                : {}
-                            }
-                            transition={{
-                              duration: 2,
-                              repeat: isMicActive ? Number.POSITIVE_INFINITY : 0,
-                              ease: "easeInOut",
-                            }}
-                          />
+                          <div className="max-w-[85%] bg-slate-100 rounded-3xl rounded-bl-lg px-5 py-4 shadow-sm">
+                            <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                              I have huge student debt, but I want to save for travel
+                            </p>
+                          </div>
+                        </motion.div>
 
-                          <motion.div
-                            className="relative w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center shadow-lg"
-                            animate={
-                              isMicActive
-                                ? {
-                                  scale: [1, 1.1, 1],
-                                }
-                                : {}
-                            }
-                            transition={{
-                              duration: 1.5,
-                              repeat: isMicActive ? Number.POSITIVE_INFINITY : 0,
-                              ease: "easeInOut",
-                            }}
-                          >
-                            <Mic className="w-8 h-8 text-white" />
+                        <motion.div
+                          className="flex justify-end"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.1, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                        >
+                          <div className="max-w-[85%] bg-slate-900 rounded-3xl rounded-br-lg px-5 py-4 shadow-lg shadow-slate-900/20">
+                            <p className="text-sm text-white font-medium leading-relaxed">
+                              I earn a good salary, but nothing's left at the end of the month
+                            </p>
+                          </div>
+                        </motion.div>
 
-                            {isMicActive && (
-                              <>
-                                <motion.div
-                                  className="absolute -right-8 top-1/2 w-4 h-0.5 bg-slate-400 rounded-full"
-                                  initial={{ scaleX: 0, opacity: 0 }}
-                                  animate={{
-                                    scaleX: [0, 1, 0],
-                                    opacity: [0, 0.8, 0],
-                                  }}
-                                  transition={{
-                                    duration: 1.2,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: 0,
-                                  }}
-                                />
-                                <motion.div
-                                  className="absolute -right-12 top-1/2 w-6 h-0.5 bg-slate-300 rounded-full"
-                                  initial={{ scaleX: 0, opacity: 0 }}
-                                  animate={{
-                                    scaleX: [0, 1, 0],
-                                    opacity: [0, 0.6, 0],
-                                  }}
-                                  transition={{
-                                    duration: 1.2,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: 0.2,
-                                  }}
-                                />
-                                <motion.div
-                                  className="absolute -left-8 top-1/2 w-4 h-0.5 bg-slate-400 rounded-full"
-                                  initial={{ scaleX: 0, opacity: 0 }}
-                                  animate={{
-                                    scaleX: [0, 1, 0],
-                                    opacity: [0, 0.8, 0],
-                                  }}
-                                  transition={{
-                                    duration: 1.2,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: 0.1,
-                                  }}
-                                />
-                                <motion.div
-                                  className="absolute -left-12 top-1/2 w-6 h-0.5 bg-slate-300 rounded-full"
-                                  initial={{ scaleX: 0, opacity: 0 }}
-                                  animate={{
-                                    scaleX: [0, 1, 0],
-                                    opacity: [0, 0.6, 0],
-                                  }}
-                                  transition={{
-                                    duration: 1.2,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: 0.3,
-                                  }}
-                                />
-                              </>
-                            )}
-                          </motion.div>
+                        <motion.div
+                          className="flex justify-start"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.3, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                        >
+                          <div className="max-w-[85%] bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl rounded-bl-lg px-5 py-4 shadow-sm border border-slate-200/50">
+                            <p className="text-sm text-slate-800 font-medium leading-relaxed">
+                              I'm getting married next year, and my parents can't help
+                            </p>
+                          </div>
                         </motion.div>
                       </motion.div>
-                    )}
+                    </motion.div>
+
+                    <motion.div
+                      className="flex justify-center"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.5, duration: 0.6 }}
+                    >
+                      <motion.div
+                        className="relative cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={startVoiceRecording}
+                      >
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-slate-900/10"
+                          animate={
+                            isMicActive
+                              ? {
+                                scale: [1, 1.4, 1],
+                                opacity: [0.3, 0, 0.3],
+                              }
+                              : {}
+                          }
+                          transition={{
+                            duration: 2,
+                            repeat: isMicActive ? Number.POSITIVE_INFINITY : 0,
+                            ease: "easeInOut",
+                          }}
+                        />
+
+                        <motion.div
+                          className="relative w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center shadow-lg"
+                          animate={
+                            isMicActive
+                              ? {
+                                scale: [1, 1.1, 1],
+                              }
+                              : {}
+                          }
+                          transition={{
+                            duration: 1.5,
+                            repeat: isMicActive ? Number.POSITIVE_INFINITY : 0,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <Mic className="w-8 h-8 text-white" />
+
+                          {isMicActive && (
+                            <>
+                              <motion.div
+                                className="absolute -right-8 top-1/2 w-4 h-0.5 bg-slate-400 rounded-full"
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: [0, 1, 0],
+                                  opacity: [0, 0.8, 0],
+                                }}
+                                transition={{
+                                  duration: 1.2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  delay: 0,
+                                }}
+                              />
+                              <motion.div
+                                className="absolute -right-12 top-1/2 w-6 h-0.5 bg-slate-300 rounded-full"
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: [0, 1, 0],
+                                  opacity: [0, 0.6, 0],
+                                }}
+                                transition={{
+                                  duration: 1.2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  delay: 0.2,
+                                }}
+                              />
+                              <motion.div
+                                className="absolute -left-8 top-1/2 w-4 h-0.5 bg-slate-400 rounded-full"
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: [0, 1, 0],
+                                  opacity: [0, 0.8, 0],
+                                }}
+                                transition={{
+                                  duration: 1.2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  delay: 0.1,
+                                }}
+                              />
+                              <motion.div
+                                className="absolute -left-12 top-1/2 w-6 h-0.5 bg-slate-300 rounded-full"
+                                initial={{ scaleX: 0, opacity: 0 }}
+                                animate={{
+                                  scaleX: [0, 1, 0],
+                                  opacity: [0, 0.6, 0],
+                                }}
+                                transition={{
+                                  duration: 1.2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  delay: 0.3,
+                                }}
+                              />
+                            </>
+                          )}
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
 
                     {/* VoiceInput component - visible when recording */}
                     {showVoiceInput && isVoiceEnabled && voiceService && (
@@ -662,279 +660,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </motion.div>
                 ) : currentStep === 2 ? (
                   <motion.div
-                    className="space-y-12 mt-8 max-w-md mx-auto"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.div
-                      className="space-y-6"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
-                    >
-                      <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Daily Updates
-                        </h3>
-
-                        <motion.div
-                          className="relative h-80 mb-8"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.8 }}
-                        >
-                          <motion.button
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                            onClick={goToPrevious}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <ChevronLeft className="w-6 h-6 text-slate-700" />
-                          </motion.button>
-
-                          <motion.button
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                            onClick={goToNext}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <ChevronRight className="w-6 h-6 text-slate-700" />
-                          </motion.button>
-
-                          <AnimatePresence mode="wait">
-                            {dailyOptions.map((option, index) => {
-                              const IconComponent = option.icon
-                              const isActive = index === currentCarouselIndex
-
-                              if (!isActive) return null
-
-                              return (
-                                <motion.div
-                                  key={option.id}
-                                  className="absolute inset-0 bg-white rounded-3xl border-2 border-slate-200 shadow-xl overflow-hidden cursor-pointer mx-16"
-                                  initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
-                                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                                  exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
-                                  transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-                                  whileHover={{ scale: 1.02, y: -4 }}
-                                  onClick={() => handleDailySelect(option.id)}
-                                >
-                                  {/* Visual Preview Based on Option Type */}
-                                  <div className="h-full flex flex-col">
-                                    {/* Header */}
-                                    <div className="p-6 border-b border-slate-100">
-                                      <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-slate-100 rounded-2xl">
-                                          <IconComponent className="w-6 h-6 text-slate-700" />
-                                        </div>
-                                        <div className="text-left">
-                                          <h4 className="text-lg font-semibold text-slate-900 font-[Satoshi]">{option.label}</h4>
-                                          {option.duration && (
-                                            <p className="text-sm text-slate-500">{option.duration}</p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Visual Preview */}
-                                    <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 to-white">
-                                      {option.id === "morning-podcast" && (
-                                        <div className="space-y-4">
-                                          <div className="bg-slate-900 rounded-2xl p-4 text-white">
-                                            <div className="flex items-center gap-3 mb-3">
-                                              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                                <Headphones className="w-6 h-6" />
-                                              </div>
-                                              <div>
-                                                <p className="font-medium">Morning Finance Brief</p>
-                                                <p className="text-xs text-white/70">2 min • Today</p>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                                              <div className="flex-1 h-1 bg-white/20 rounded-full">
-                                                <div className="w-1/3 h-full bg-white rounded-full"></div>
-                                              </div>
-                                              <span className="text-xs">0:45</span>
-                                            </div>
-                                          </div>
-                                          <p className="text-sm text-slate-600 text-center">
-                                            "Your spending is 12% below target this week..."
-                                          </p>
-                                        </div>
-                                      )}
-
-                                      {option.id === "visual-dashboard" && (
-                                        <div className="space-y-3">
-                                          <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-green-50 rounded-xl p-3 text-center">
-                                              <div className="text-lg font-bold text-green-700">+CHF 127</div>
-                                              <div className="text-xs text-green-600">This week</div>
-                                            </div>
-                                            <div className="bg-blue-50 rounded-xl p-3 text-center">
-                                              <div className="text-lg font-bold text-blue-700">73%</div>
-                                              <div className="text-xs text-blue-600">Budget left</div>
-                                            </div>
-                                          </div>
-                                          <div className="bg-slate-100 rounded-xl p-3">
-                                            <div className="flex justify-between items-center mb-2">
-                                              <span className="text-xs text-slate-600">Japan Fund</span>
-                                              <span className="text-xs font-medium">CHF 1,240</span>
-                                            </div>
-                                            <div className="w-full h-2 bg-slate-200 rounded-full">
-                                              <div className="w-3/5 h-full bg-slate-700 rounded-full"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {option.id === "quick-notification" && (
-                                        <div className="space-y-3">
-                                          <div className="bg-slate-900 rounded-2xl p-4 text-white text-left">
-                                            <div className="flex items-start gap-3">
-                                              <Bell className="w-5 h-5 mt-0.5" />
-                                              <div>
-                                                <p className="font-medium text-sm">Finance Guardian</p>
-                                                <p className="text-xs text-white/70 mt-1">
-                                                  You're CHF 45 under budget today. Great job! 🎯
-                                                </p>
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <div className="bg-blue-50 rounded-xl p-3 text-left">
-                                            <div className="flex items-start gap-3">
-                                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                                              <div>
-                                                <p className="text-sm font-medium text-blue-900">Weekly Summary</p>
-                                                <p className="text-xs text-blue-700">Tap to view your progress</p>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {option.id === "voice-summary" && (
-                                        <div className="space-y-4">
-                                          <div className="bg-slate-100 rounded-2xl p-4 text-center">
-                                            <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                                              <Volume2 className="w-8 h-8 text-white" />
-                                            </div>
-                                            <div className="flex justify-center gap-1 mb-2">
-                                              {[...Array(5)].map((_, i) => (
-                                                <motion.div
-                                                  key={i}
-                                                  className="w-1 bg-slate-400 rounded-full"
-                                                  animate={{ height: [8, 16, 8] }}
-                                                  transition={{
-                                                    duration: 1,
-                                                    repeat: Number.POSITIVE_INFINITY,
-                                                    delay: i * 0.1,
-                                                  }}
-                                                />
-                                              ))}
-                                            </div>
-                                            <p className="text-xs text-slate-600">
-                                              "Good morning Alex, your finances are looking healthy..."
-                                            </p>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              )
-                            })}
-                          </AnimatePresence>
-
-                          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2">
-                            {dailyOptions.map((option, index) => (
-                              <motion.button
-                                key={option.id}
-                                className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentCarouselIndex ? "bg-slate-900 w-6" : "bg-slate-300"
-                                  }`}
-                                onClick={() => {
-                                  setCurrentCarouselIndex(index)
-                                  handleDailySelect(option.id)
-                                }}
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
-                              />
-                            ))}
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="space-y-6"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.2 }}
-                    >
-                      <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Weekly Recap
-                        </h3>
-                        <div className="space-y-3">
-                          {weeklyOptions.map((option, index) => {
-                            const IconComponent = option.icon
-                            return (
-                              <motion.div
-                                key={option.id}
-                                className={`relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${selectedWeekly === option.id
-                                  ? "bg-slate-900 border-slate-900 text-white shadow-2xl shadow-slate-900/25"
-                                  : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-lg shadow-sm text-slate-900"
-                                  }`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{
-                                  delay: 1.3 + index * 0.1,
-                                  duration: 0.4,
-                                  ease: [0.25, 0.1, 0.25, 1],
-                                }}
-                                whileHover={{ scale: 1.01, y: -1 }}
-                                whileTap={{ scale: 0.99 }}
-                                onClick={() => handleWeeklySelect(option.id)}
-                                style={{
-                                  boxShadow:
-                                    selectedWeekly === option.id
-                                      ? "0 20px 25px -5px rgba(15, 23, 42, 0.25), 0 10px 10px -5px rgba(15, 23, 42, 0.1)"
-                                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                                }}
-                              >
-                                <div className="flex items-center gap-4">
-                                  <motion.div
-                                    animate={selectedWeekly === option.id ? { scale: [1, 1.1, 1] } : {}}
-                                    transition={{ duration: 0.4 }}
-                                  >
-                                    <IconComponent
-                                      className={`w-5 h-5 ${selectedWeekly === option.id ? "text-white" : "text-slate-600"
-                                        }`}
-                                    />
-                                  </motion.div>
-                                  <p
-                                    className={`text-sm font-medium flex-1 text-left ${selectedWeekly === option.id ? "text-white" : "text-slate-900"
-                                      }`}
-                                  >
-                                    {option.label}
-                                  </p>
-                                  <motion.div
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${selectedWeekly === option.id ? "bg-white" : "bg-slate-300"
-                                      }`}
-                                    animate={selectedWeekly === option.id ? { scale: [1, 1.3, 1] } : {}}
-                                    transition={{ duration: 0.4 }}
-                                  />
-                                </div>
-                              </motion.div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                ) : currentStep === 3 ? (
-                  <motion.div
                     className="space-y-8 mt-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -984,12 +709,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                                     className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-600"}`}
                                   />
                                 </div>
-                                <span className="text-base font-medium font-[Satoshi]">{option.label}</span>
+                                <span className="text-base font-medium font-sans">{option.label}</span>
                               </div>
 
                               <div className="flex items-center gap-3">
                                 <span
-                                  className={`text-lg font-semibold font-[Satoshi] ${isSelected ? "text-white" : "text-slate-900"}`}
+                                  className={`text-lg font-semibold tracking-tighter font-sans ${isSelected ? "text-white" : "text-slate-900"
+                                    }`}
                                 >
                                   {option.savings}
                                 </span>
@@ -1024,7 +750,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.2 }}
                     >
-                      <p className="text-base text-slate-500 font-medium font-[Satoshi]">
+                      <p className="text-base text-slate-500 font-medium font-sans">
                         Any one of these gets you to Japan in ~3 months.
                       </p>
                     </motion.div>
@@ -1083,7 +809,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              {currentStep > 0 && currentStep !== 3 && (
+              {currentStep > 0 && currentStep !== 2 && (
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
                   <Button
                     onClick={handleNext}
@@ -1109,7 +835,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   <Button
                     variant="ghost"
                     onClick={handleSkip}
-                    className="w-full text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-sm rounded-xl h-12 transition-all duration-200"
+                    className="w-full text-slate-500 hover:text-slate-700 hover:!bg-slate-100 text-sm rounded-xl h-12 transition-all duration-200"
                   >
                     Skip for now
                   </Button>

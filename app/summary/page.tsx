@@ -292,7 +292,7 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
               ease: ANIMATION_CONFIG.easing,
             }}
           >
-            <h1 className="text-3xl font-extrabold tracking-tighter text-gray-900 mb-1">
+            <h1 className="text-3xl font-bold tracking-tighter text-gray-900 mb-1 font-sans">
               Deine Finanzübersicht
             </h1>
             <br></br>
