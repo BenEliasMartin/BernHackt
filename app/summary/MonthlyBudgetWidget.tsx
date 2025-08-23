@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Target } from "lucide-react";
 
 interface BudgetCategory {
   name: string;
@@ -43,144 +42,104 @@ export function MonthlyBudgetWidget({
     savingsGoal: sg = savingsGoal,
     savingsCurrent: sc = savingsCurrent
   } = budgetData;
+
   const remaining = tb - ts;
   const spentPercentage = (ts / tb) * 100;
   const savingsPercentage = sg > 0 ? (sc / sg) * 100 : 0;
 
-  const getStatusColor = (percentage: number) => {
-    if (percentage >= 90) return "text-red-600";
-    if (percentage >= 75) return "text-yellow-600";
-    return "text-green-600";
-  };
-
-  const getStatusIcon = (percentage: number) => {
-    if (percentage >= 90) return <TrendingDown className="h-4 w-4" />;
-    if (percentage >= 75) return <TrendingUp className="h-4 w-4" />;
-    return <TrendingUp className="h-4 w-4" />;
-  };
-
   return (
     <motion.div
-      className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
-      initial={{ opacity: 0, y: 20 }}
+      className="bg-white border border-gray-200 rounded-lg p-4 max-w-sm"
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.2 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Calendar className="h-5 w-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Monthly Budget</h3>
-            <p className="text-sm text-gray-600">{m} {y}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-600">Status</p>
-          <div className={`flex items-center gap-1 ${getStatusColor(spentPercentage)}`}>
-            {getStatusIcon(spentPercentage)}
-            <span className="text-sm font-medium">
-              {spentPercentage >= 90 ? "Over Budget" :
-                spentPercentage >= 75 ? "Warning" : "On Track"}
-            </span>
-          </div>
-        </div>
+      <div className="mb-4">
+        <h3 className="text-sm font-medium text-gray-900">Budget Overview</h3>
+        <p className="text-xs text-gray-500">{m} {y}</p>
       </div>
 
-      {/* Budget Overview */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">Total Budget</p>
-          <p className="text-xl font-bold text-gray-900">${tb.toLocaleString()}</p>
+      {/* Summary Numbers */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div>
+          <p className="text-xs text-gray-500">Budget</p>
+          <p className="text-sm font-semibold text-gray-900">CHF {tb.toLocaleString()}</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">Spent</p>
-          <p className="text-xl font-bold text-red-600">${ts.toLocaleString()}</p>
+        <div>
+          <p className="text-xs text-gray-500">Spent</p>
+          <p className="text-sm font-semibold text-gray-900">CHF {ts.toLocaleString()}</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">Remaining</p>
-          <p className={`text-xl font-bold ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            ${remaining.toLocaleString()}
+        <div>
+          <p className="text-xs text-gray-500">Left</p>
+          <p className={`text-sm font-semibold ${remaining >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+            CHF {remaining.toLocaleString()}
           </p>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">Budget Usage</span>
-          <span className="text-sm text-gray-600">{spentPercentage.toFixed(1)}%</span>
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs text-gray-500">Usage</span>
+          <span className="text-xs text-gray-500">{spentPercentage.toFixed(0)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
           <motion.div
-            className={`h-3 rounded-full ${spentPercentage >= 90 ? 'bg-red-500' :
-                spentPercentage >= 75 ? 'bg-yellow-500' : 'bg-green-500'
+            className={`h-1.5 rounded-full ${spentPercentage >= 90 ? 'bg-red-500' :
+              spentPercentage >= 75 ? 'bg-yellow-500' : 'bg-gray-600'
               }`}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(spentPercentage, 100)}%` }}
-            transition={{ duration: 1, delay: 0.2 }}
+            transition={{ duration: 0.6 }}
           />
         </div>
       </div>
 
       {/* Categories */}
-      <div className="space-y-4 mb-6">
-        <h4 className="font-semibold text-gray-800">Category Breakdown</h4>
-        {cat.map((category: any, index: number) => {
+      <div className="space-y-2 mb-4">
+        <h4 className="text-xs font-medium text-gray-700">Categories</h4>
+        {cat.slice(0, 3).map((category: any, index: number) => {
           const categoryPercentage = (category.spent / category.allocated) * 100;
           return (
-            <motion.div
-              key={category.name}
-              className="space-y-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-            >
+            <div key={category.name} className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">{category.name}</span>
-                <span className="text-sm text-gray-600">
-                  ${category.spent.toLocaleString()} / ${category.allocated.toLocaleString()}
-                </span>
+                <span className="text-xs text-gray-700 truncate max-w-[100px]">{category.name}</span>
+                <span className="text-xs text-gray-500">CHF {category.spent.toLocaleString()}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-1">
                 <motion.div
-                  className={`h-2 rounded-full ${category.color}`}
+                  className="h-1 bg-gray-600 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(categoryPercentage, 100)}%` }}
-                  transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
                 />
               </div>
-            </motion.div>
+            </div>
           );
         })}
+        {cat.length > 3 && (
+          <p className="text-xs text-gray-400 text-center">+{cat.length - 3} more</p>
+        )}
       </div>
 
       {/* Savings Goal */}
       {sg > 0 && (
-        <div className="border-t pt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="h-4 w-4 text-green-600" />
-            <span className="font-semibold text-gray-800">Savings Goal</span>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">Progress</span>
-            <span className="text-sm text-gray-600">
-              ${sc.toLocaleString()} / ${sg.toLocaleString()}
+        <div className="border-t pt-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-gray-500">Savings</span>
+            <span className="text-xs text-gray-500">
+              CHF {sc.toLocaleString()} / CHF {sg.toLocaleString()}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1">
             <motion.div
-              className="h-2 bg-green-500 rounded-full"
+              className="h-1 bg-gray-600 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(savingsPercentage, 100)}%` }}
-              transition={{ delay: 0.8, duration: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
             />
           </div>
-          <p className="text-sm text-green-600 mt-1">
-            {savingsPercentage.toFixed(1)}% complete
-          </p>
         </div>
       )}
     </motion.div>

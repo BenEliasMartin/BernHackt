@@ -124,9 +124,13 @@ export default function Summary() {
 3. Calculate monthly payments for loans and mortgages
 4. Provide personalized financial advice
 
-When users ask about their budget, remaining money for the month, or spending status, automatically use the generateMonthlyBudgetWidget tool to provide them with a comprehensive budget overview.
+IMPORTANT: Keep your responses concise and focused. When users ask about budgets, spending, or financial status:
+- Use the generateMonthlyBudgetWidget tool to show the data visually
+- Give ONLY a brief, relevant response (1-2 sentences max)
+- Do NOT repeat all the numbers or details in text since the widget will display them
+- Focus on insights, not data regurgitation
 
-For budget-related queries, use realistic sample data that demonstrates the tool's capabilities. Always explain what you're showing them and provide actionable insights.`
+Example: "Here's your budget overview for this month. You're currently on track with 65% of your budget used."`
         },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -268,7 +272,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
   return (
     <div className="min-h-screen bg-background">
       <div className="min-h-screen bg-white">
-        <div className="max-w-md mx-auto p-6 space-y-8">
+        <div className="max-w-lg mx-auto p-6 space-y-2">
           {/* Header */}
           <motion.div
             className="pt-8 pb-4"
@@ -279,12 +283,12 @@ For budget-related queries, use realistic sample data that demonstrates the tool
               ease: ANIMATION_CONFIG.easing,
             }}
           >
-            <h1 className="text-5xl font-extrabold tracking-tighter text-gray-900 mb-1">
+            <h1 className="text-3xl font-extrabold tracking-tighter text-gray-900 mb-1">
               Your Financial Summary
             </h1>
             <br></br>
             <motion.button
-              className="text-white text-lg cursor-pointer font-bold tracking-tight rounded-full px-4 py-2 bg-blue-600"
+              className="text-white text-md cursor-pointer font-bold tracking-tight rounded-full px-3 py-2 bg-blue-600"
               whileTap={{ scale: 0.9 }}
               onClick={handleViewButtonClick}
             >
@@ -301,13 +305,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
           >
             {/* Placeholder Widget 1 - Chat Box */}
             <div className="">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800">
-                  Clanker Chat
-                </h3>
-              </div>
-
-              <div className="h-80 overflow-y-auto bg-white p-0 space-y-3">
+              <div className="h-[60vh] overflow-y-auto bg-white p-0 space-y-3">
                 <AnimatePresence>
                   {messages.map((message) => (
                     <motion.div
@@ -321,7 +319,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
                         }`}
                     >
                       <div
-                        className={`max-w-[80%] p-5 rounded-3xl ${message.sender === "user"
+                        className={`max-w-[85%] p-4 rounded-2xl ${message.sender === "user"
                           ? "bg-blue-700 text-white rounded-br-md"
                           : "bg-gray-100 text-gray-800 rounded-bl-md"
                           }`}
@@ -330,7 +328,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
                           {message.content}
                         </div>
                         {message.budgetWidget && (
-                          <div className="mt-3">
+                          <div className="mt-2">
                             <MonthlyBudgetWidget
                               month={message.budgetWidget.month}
                               year={message.budgetWidget.year}
