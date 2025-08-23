@@ -29,10 +29,23 @@ export function MonthlyBudgetWidget({
   categories,
   savingsGoal = 0,
   savingsCurrent = 0,
-}: MonthlyBudgetWidgetProps) {
-  const remaining = totalBudget - totalSpent;
-  const spentPercentage = (totalSpent / totalBudget) * 100;
-  const savingsPercentage = savingsGoal > 0 ? (savingsCurrent / savingsGoal) * 100 : 0;
+  data,
+}: MonthlyBudgetWidgetProps & { data?: any }) {
+  // Use data prop if provided, otherwise use individual props
+  const budgetData = data || { month, year, totalBudget, totalSpent, categories, savingsGoal, savingsCurrent };
+
+  const {
+    month: m = month,
+    year: y = year,
+    totalBudget: tb = totalBudget,
+    totalSpent: ts = totalSpent,
+    categories: cat = categories,
+    savingsGoal: sg = savingsGoal,
+    savingsCurrent: sc = savingsCurrent
+  } = budgetData;
+  const remaining = tb - ts;
+  const spentPercentage = (ts / tb) * 100;
+  const savingsPercentage = sg > 0 ? (sc / sg) * 100 : 0;
 
   const getStatusColor = (percentage: number) => {
     if (percentage >= 90) return "text-red-600";
@@ -61,7 +74,7 @@ export function MonthlyBudgetWidget({
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Monthly Budget</h3>
-            <p className="text-sm text-gray-600">{month} {year}</p>
+            <p className="text-sm text-gray-600">{m} {y}</p>
           </div>
         </div>
         <div className="text-right">
@@ -69,8 +82,8 @@ export function MonthlyBudgetWidget({
           <div className={`flex items-center gap-1 ${getStatusColor(spentPercentage)}`}>
             {getStatusIcon(spentPercentage)}
             <span className="text-sm font-medium">
-              {spentPercentage >= 90 ? "Over Budget" : 
-               spentPercentage >= 75 ? "Warning" : "On Track"}
+              {spentPercentage >= 90 ? "Over Budget" :
+                spentPercentage >= 75 ? "Warning" : "On Track"}
             </span>
           </div>
         </div>
@@ -80,11 +93,11 @@ export function MonthlyBudgetWidget({
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center p-3 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">Total Budget</p>
-          <p className="text-xl font-bold text-gray-900">${totalBudget.toLocaleString()}</p>
+          <p className="text-xl font-bold text-gray-900">${tb.toLocaleString()}</p>
         </div>
         <div className="text-center p-3 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">Spent</p>
-          <p className="text-xl font-bold text-red-600">${totalSpent.toLocaleString()}</p>
+          <p className="text-xl font-bold text-red-600">${ts.toLocaleString()}</p>
         </div>
         <div className="text-center p-3 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">Remaining</p>
@@ -102,10 +115,9 @@ export function MonthlyBudgetWidget({
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <motion.div
-            className={`h-3 rounded-full ${
-              spentPercentage >= 90 ? 'bg-red-500' : 
-              spentPercentage >= 75 ? 'bg-yellow-500' : 'bg-green-500'
-            }`}
+            className={`h-3 rounded-full ${spentPercentage >= 90 ? 'bg-red-500' :
+                spentPercentage >= 75 ? 'bg-yellow-500' : 'bg-green-500'
+              }`}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(spentPercentage, 100)}%` }}
             transition={{ duration: 1, delay: 0.2 }}
@@ -116,7 +128,7 @@ export function MonthlyBudgetWidget({
       {/* Categories */}
       <div className="space-y-4 mb-6">
         <h4 className="font-semibold text-gray-800">Category Breakdown</h4>
-        {categories.map((category, index) => {
+        {cat.map((category: any, index: number) => {
           const categoryPercentage = (category.spent / category.allocated) * 100;
           return (
             <motion.div
@@ -146,7 +158,7 @@ export function MonthlyBudgetWidget({
       </div>
 
       {/* Savings Goal */}
-      {savingsGoal > 0 && (
+      {sg > 0 && (
         <div className="border-t pt-4">
           <div className="flex items-center gap-2 mb-3">
             <Target className="h-4 w-4 text-green-600" />
@@ -155,7 +167,7 @@ export function MonthlyBudgetWidget({
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-600">Progress</span>
             <span className="text-sm text-gray-600">
-              ${savingsCurrent.toLocaleString()} / ${savingsGoal.toLocaleString()}
+              ${sc.toLocaleString()} / ${sg.toLocaleString()}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">

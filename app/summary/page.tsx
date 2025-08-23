@@ -83,6 +83,7 @@ interface ChatMessage {
   content: React.ReactNode;
   sender: "user" | "other";
   timestamp: Date;
+  budgetWidget?: any; // Optional budget widget data
 }
 
 export default function Summary() {
@@ -90,7 +91,7 @@ export default function Summary() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showDetailView, setShowDetailView] = useState(false);
-  const [budgetWidget, setBudgetWidget] = useState<any>(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -142,7 +143,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
 
       // Check if any tools were called
       if (response.toolCalls && response.toolCalls.length > 0) {
-        // Process tool calls
+        // Process tool calls and create a rich message with the widget
         for (const toolCall of response.toolCalls) {
           if (toolCall.function.name === 'generateMonthlyBudgetWidget') {
             try {
@@ -151,7 +152,20 @@ For budget-related queries, use realistic sample data that demonstrates the tool
                 type: "monthlyBudgetWidget",
                 data: args
               };
-              setBudgetWidget(budgetData);
+
+              // Add the AI response with budget widget
+              pushOtherMessage(response.message.content || "Here's your monthly budget overview:");
+
+              // Add a separate message with the budget widget
+              const budgetMessage: ChatMessage = {
+                id: Date.now().toString(),
+                content: "Here's your budget overview:",
+                sender: "other",
+                timestamp: new Date(),
+                budgetWidget: budgetData.data
+              };
+              setMessages(prev => [...prev, budgetMessage]);
+              return; // Exit early since we've handled the response
             } catch (error) {
               console.error('Error parsing tool arguments:', error);
             }
@@ -159,7 +173,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
         }
       }
 
-      // Add AI response to chat
+      // Add AI response to chat (for non-tool responses)
       pushOtherMessage(response.message.content || 'I apologize, but I couldn\'t generate a response at this time.');
 
     } catch (error) {
@@ -315,6 +329,19 @@ For budget-related queries, use realistic sample data that demonstrates the tool
                         <div className="text-sm font-bold">
                           {message.content}
                         </div>
+                        {message.budgetWidget && (
+                          <div className="mt-3">
+                            <MonthlyBudgetWidget
+                              month={message.budgetWidget.month}
+                              year={message.budgetWidget.year}
+                              totalBudget={message.budgetWidget.totalBudget}
+                              totalSpent={message.budgetWidget.totalSpent}
+                              categories={message.budgetWidget.categories}
+                              savingsGoal={message.budgetWidget.savingsGoal}
+                              savingsCurrent={message.budgetWidget.savingsCurrent}
+                            />
+                          </div>
+                        )}
                         <div
                           className={`text-xs mt-1 opacity-70 ${message.sender === "user"
                             ? "text-blue-100"
@@ -361,32 +388,7 @@ For budget-related queries, use realistic sample data that demonstrates the tool
               </div>
             </div>
 
-            {/* Budget Widget Display */}
-            {budgetWidget && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="relative"
-              >
-                <button
-                  onClick={() => setBudgetWidget(null)}
-                  className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10"
-                  title="Close widget"
-                >
-                  <span className="text-gray-600 text-sm">×</span>
-                </button>
-                <MonthlyBudgetWidget
-                  month={budgetWidget.data.month}
-                  year={budgetWidget.data.year}
-                  totalBudget={budgetWidget.data.totalBudget}
-                  totalSpent={budgetWidget.data.totalSpent}
-                  categories={budgetWidget.data.categories}
-                  savingsGoal={budgetWidget.data.savingsGoal}
-                  savingsCurrent={budgetWidget.data.savingsCurrent}
-                />
-              </motion.div>
-            )}
+
           </motion.div>
 
           {/* Permanent Grainy Gradient Ellipse Background 
