@@ -1,202 +1,238 @@
 "use client"
 
+import React, { memo, useMemo, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, AlertCircle, DollarSign } from "lucide-react"
-import { useState } from "react"
+import {
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  DollarSign,
+  Clock,
+  Globe,
+  ChevronDown,
+  type LucideIcon,
+} from "lucide-react"
 
-const newsItems = [
-  {
-    id: 1,
-    title: "Swiss National Bank Holds Interest Rates Steady",
-    summary: "SNB maintains policy rate at 1.75% amid inflation concerns and global economic uncertainty.",
-    time: "2 hours ago",
-    category: "Central Banking",
-    impact: "neutral",
-    icon: DollarSign,
-    color: "text-blue-400",
-  },
-  {
-    id: 2,
-    title: "Tech Stocks Rally on AI Optimism",
-    summary: "Major technology companies see significant gains as investors bet on artificial intelligence growth.",
-    time: "4 hours ago",
-    category: "Markets",
-    impact: "positive",
-    icon: TrendingUp,
-    color: "text-emerald-400",
-  },
-  {
-    id: 3,
-    title: "European Markets Mixed on Energy Concerns",
-    summary: "Energy sector volatility continues to impact European indices amid geopolitical tensions.",
-    time: "6 hours ago",
-    category: "Markets",
-    impact: "negative",
-    icon: TrendingDown,
-    color: "text-red-400",
-  },
-  {
-    id: 4,
-    title: "Cryptocurrency Regulation Updates",
-    summary: "New regulatory framework for digital assets expected to impact trading volumes significantly.",
-    time: "8 hours ago",
-    category: "Crypto",
-    impact: "neutral",
-    icon: AlertCircle,
-    color: "text-orange-400",
-  },
-  {
-    id: 5,
-    title: "Swiss Franc Strengthens Against Euro",
-    summary: "CHF gains ground as safe-haven demand increases amid global market uncertainty.",
-    time: "12 hours ago",
-    category: "Currency",
-    impact: "positive",
-    icon: TrendingUp,
-    color: "text-emerald-400",
-  },
+// --- Types
+type Impact = "positive" | "negative" | "neutral"
+
+type NewsItem = {
+  id: number
+  title: string
+  summary: string
+  time: string
+  category: string
+  impact: Impact
+  icon: LucideIcon
+}
+
+// --- Example data (replace with real feed)
+const newsItems: NewsItem[] = [
+  { id: 1, title: "Swiss National Bank Holds Interest Rates Steady", summary: "SNB maintains policy rate at 1.75% amid inflation concerns and global economic uncertainty.", time: "2 hours ago", category: "Central Banking", impact: "neutral", icon: DollarSign },
+  { id: 2, title: "Tech Stocks Rally on AI Optimism", summary: "Major technology companies see significant gains as investors bet on artificial intelligence growth.", time: "4 hours ago", category: "Markets", impact: "positive", icon: TrendingUp },
+  { id: 3, title: "European Markets Mixed on Energy Concerns", summary: "Energy sector volatility continues to impact European indices amid geopolitical tensions.", time: "6 hours ago", category: "Markets", impact: "negative", icon: TrendingDown },
+  { id: 4, title: "Cryptocurrency Regulation Updates", summary: "New regulatory framework for digital assets expected to impact trading volumes significantly.", time: "8 hours ago", category: "Crypto", impact: "neutral", icon: AlertCircle },
+  { id: 5, title: "Swiss Franc Strengthens Against Euro", summary: "CHF gains ground as safe-haven demand increases amid global market uncertainty.", time: "12 hours ago", category: "Currency", impact: "positive", icon: TrendingUp },
 ]
 
+// --- Config
+const NEWS_PER_COLLAPSED = 2
+
+const impactColor = (impact: Impact) => {
+  switch (impact) {
+    case "positive":
+      return "text-green-600"
+    case "negative":
+      return "text-red-600"
+    default:
+      return "text-gray-500"
+  }
+}
+
+const NewsRow = memo(function NewsRow({ item, isExpanded }: { item: NewsItem; isExpanded: boolean }) {
+  const Icon = item.icon
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
+      {/* Icon */}
+      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+        <Icon className="h-4 w-4 text-gray-600" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-2">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <h4 className="text-sm font-light text-gray-900 leading-tight">
+            {item.title}
+          </h4>
+          <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+            <Clock className="h-3 w-3" />
+            <span>{item.time}</span>
+          </div>
+        </div>
+
+        {/* Summary - only show when expanded */}
+        {isExpanded && (
+          <p className="text-xs text-gray-600 leading-relaxed font-light">
+            {item.summary}
+          </p>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              {item.category}
+            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs">🇨🇭</span>
+              <span className="text-xs text-gray-400">SRF</span>
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-1 text-xs font-light ${impactColor(item.impact)}`}>
+            {item.impact === "positive" && <TrendingUp className="h-3 w-3" />}
+            {item.impact === "negative" && <TrendingDown className="h-3 w-3" />}
+            {item.impact === "neutral" && <AlertCircle className="h-3 w-3" />}
+            <span className="capitalize">{item.impact}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+})
+
 export function NewsWidget() {
-  const [isExpanded, setIsExpanded] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
 
-  const categories = ["All", "Markets", "Central Banking", "Crypto", "Currency"]
-  const filteredNews =
-    selectedCategory && selectedCategory !== "All"
-      ? newsItems.filter((item) => item.category === selectedCategory)
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(newsItems.map((n) => n.category)))],
+    []
+  )
+
+  const filteredNews = useMemo(() => {
+    return selectedCategory && selectedCategory !== "All"
+      ? newsItems.filter((i) => i.category === selectedCategory)
       : newsItems
+  }, [selectedCategory])
 
-  const displayedNews = isExpanded ? filteredNews : filteredNews.slice(0, 3)
+  const visibleItems = filteredNews.slice(0, NEWS_PER_COLLAPSED)
+  const extraItems = filteredNews.slice(NEWS_PER_COLLAPSED)
 
   const handleCategoryChange = (category: string) => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setSelectedCategory(category === "All" ? null : category)
-      setIsLoading(false)
-    }, 300)
+    setSelectedCategory(category === "All" ? null : category)
+    setExpandedItems(new Set()) // reset expanded items on filter change
+  }
+
+  const toggleItemExpansion = (itemId: number) => {
+    const newExpanded = new Set(expandedItems)
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId)
+    } else {
+      newExpanded.add(itemId)
+    }
+    setExpandedItems(newExpanded)
   }
 
   return (
-    <Card className="p-6 bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-white">Financial News</h3>
-            <p className="text-sm text-zinc-400">
-              <span className="inline-flex items-center gap-1">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                {filteredNews.length} updates today
-              </span>
-            </p>
+    <Card className="p-8 bg-white border border-gray-100 shadow-sm">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Globe className="h-5 w-5 text-gray-600" />
+          <div className="flex-1">
+            <h3 className="text-xl font-extralight text-gray-900 tracking-wide">Financial News</h3>
+            <div className="text-xs text-gray-500 font-light">
+              {filteredNews.length} updates today
+            </div>
           </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-all duration-300 hover:scale-110"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-zinc-400 transition-transform duration-300" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-zinc-400 transition-transform duration-300" />
-            )}
-          </button>
         </div>
 
-        {isExpanded && (
-          <div className="flex gap-2 overflow-x-auto pb-2 animate-in slide-in-from-top-2 duration-300">
-            {categories.map((category) => (
+        {/* Category Filter */}
+        <div className="flex gap-2 flex-wrap pb-2">
+          {categories.map((category) => {
+            const active = selectedCategory === category || (selectedCategory === null && category === "All")
+            return (
               <button
                 key={category}
+                type="button"
                 onClick={() => handleCategoryChange(category)}
-                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === category || (selectedCategory === null && category === "All")
-                    ? "bg-zinc-700 text-white shadow-lg shadow-zinc-700/20"
-                    : "bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700/50"
-                }`}
+                className={`px-3 py-1 text-xs rounded-full transition-all duration-200 font-light ${active
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
               >
                 {category}
               </button>
-            ))}
-          </div>
-        )}
+            )
+          })}
+        </div>
 
-        {isLoading ? (
+        {/* Always-visible news items */}
+        <div className="space-y-2">
+          {visibleItems.map((item) => (
+            <div
+              key={item.id}
+              className="cursor-pointer"
+              onClick={() => toggleItemExpansion(item.id)}
+            >
+              <NewsRow item={item} isExpanded={expandedItems.has(item.id)} />
+            </div>
+          ))}
+        </div>
+
+        {/* Additional items (collapsible) */}
+        {extraItems.length > 0 && (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-800/50 animate-pulse">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-zinc-700 rounded-lg"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-zinc-700 rounded w-3/4"></div>
-                    <div className="h-3 bg-zinc-700 rounded w-1/2"></div>
+            <button
+              onClick={() => {
+                // Toggle all extra items at once
+                const allExtraIds = extraItems.map(item => item.id)
+                const newExpanded = new Set(expandedItems)
+                const someExtraExpanded = allExtraIds.some(id => newExpanded.has(id))
+
+                if (someExtraExpanded) {
+                  // Remove all extra items
+                  allExtraIds.forEach(id => newExpanded.delete(id))
+                } else {
+                  // Add all extra items
+                  allExtraIds.forEach(id => newExpanded.add(id))
+                }
+                setExpandedItems(newExpanded)
+              }}
+              className="flex items-center justify-center gap-2 w-full p-3 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-gray-100"
+            >
+              <span>
+                {extraItems.some(item => expandedItems.has(item.id))
+                  ? "Show less"
+                  : `Show ${extraItems.length} more updates`}
+              </span>
+              <ChevronDown
+                className={`h-3 w-3 transition-transform duration-200 ${extraItems.some(item => expandedItems.has(item.id)) ? "rotate-180" : ""
+                  }`}
+              />
+            </button>
+
+            {/* Extra items */}
+            {extraItems.some(item => expandedItems.has(item.id)) && (
+              <div className="space-y-2 border-t border-gray-100 pt-4">
+                {extraItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="cursor-pointer"
+                    onClick={() => toggleItemExpansion(item.id)}
+                  >
+                    <NewsRow item={item} isExpanded={expandedItems.has(item.id)} />
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        ) : (
-          <div className="space-y-3">
-            {displayedNews.map((item, index) => {
-              const IconComponent = item.icon
-              return (
-                <div
-                  key={item.id}
-                  className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-zinc-700 transition-all duration-300 cursor-pointer group hover:shadow-lg hover:shadow-zinc-900/20 transform hover:-translate-y-1"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`p-2 rounded-lg bg-zinc-800 group-hover:bg-zinc-700 transition-all duration-300 group-hover:scale-110`}
-                    >
-                      <IconComponent className={`h-4 w-4 ${item.color} transition-all duration-300`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h4 className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors duration-300 line-clamp-1">
-                          {item.title}
-                        </h4>
-                        <span className="text-xs text-zinc-500 whitespace-nowrap">{item.time}</span>
-                      </div>
-                      <p className="text-xs text-zinc-400 line-clamp-2 mb-2 group-hover:text-zinc-300 transition-colors duration-300">
-                        {item.summary}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs px-2 py-1 bg-zinc-700 text-zinc-300 rounded-full group-hover:bg-zinc-600 transition-colors duration-300">
-                          {item.category}
-                        </span>
-                        <div
-                          className={`flex items-center gap-1 text-xs transition-all duration-300 ${
-                            item.impact === "positive"
-                              ? "text-emerald-400"
-                              : item.impact === "negative"
-                                ? "text-red-400"
-                                : "text-zinc-400"
-                          }`}
-                        >
-                          {item.impact === "positive" && <TrendingUp className="h-3 w-3 animate-pulse" />}
-                          {item.impact === "negative" && <TrendingDown className="h-3 w-3 animate-pulse" />}
-                          {item.impact === "neutral" && <AlertCircle className="h-3 w-3" />}
-                          <span className="capitalize">{item.impact}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {!isExpanded && filteredNews.length > 3 && (
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="w-full py-2 text-sm text-zinc-400 hover:text-white transition-all duration-300 border border-zinc-800 rounded-lg hover:bg-zinc-800/30 hover:border-zinc-700 transform hover:scale-105"
-          >
-            Show {filteredNews.length - 3} more updates
-          </button>
         )}
       </div>
     </Card>
   )
 }
+
+export default NewsWidget

@@ -1,43 +1,77 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "daisyui";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   /* Updated color tokens to match premium finance app design brief */
-  --background: oklch(0.145 0 0); /* Dark theme main background */
-  --foreground: oklch(0.985 0 0); /* Primary text color (white) */
-  --card: oklch(0.269 0 0); /* Card backgrounds (gray-700) */
-  --card-foreground: oklch(0.985 0 0); /* Card text color */
-  --popover: oklch(0.269 0 0); /* Popover backgrounds */
-  --popover-foreground: oklch(0.985 0 0); /* Popover text */
-  --primary: oklch(0.646 0.222 264.376); /* Blue accent for CTAs */
-  --primary-foreground: oklch(0.985 0 0); /* White text on primary */
-  --secondary: oklch(0.985 0 0); /* Light backgrounds */
-  --secondary-foreground: oklch(0.145 0 0); /* Dark text on light */
-  --muted: oklch(0.97 0 0); /* Muted backgrounds */
-  --muted-foreground: oklch(0.269 0 0); /* Muted text */
-  --accent: oklch(0.696 0.17 162.48); /* Green for positive indicators */
-  --accent-foreground: oklch(0.985 0 0); /* White text on accent */
-  --destructive: oklch(0.627 0.265 27.325); /* Red for errors */
-  --destructive-foreground: oklch(0.985 0 0); /* White text on destructive */
-  --border: oklch(0.439 0 0); /* Border color */
-  --input: oklch(0.269 0 0); /* Input backgrounds */
-  --ring: oklch(0.646 0.222 264.376); /* Focus ring (blue) */
-  --chart-1: oklch(0.646 0.222 264.376); /* Chart color 1 (blue) */
-  --chart-2: oklch(0.6 0.118 264.376); /* Chart color 2 (lighter blue) */
-  --chart-3: oklch(0.696 0.17 162.48); /* Chart color 3 (green) */
-  --chart-4: oklch(0.769 0.188 70.08); /* Chart color 4 (yellow) */
-  --chart-5: oklch(0.627 0.265 27.325); /* Chart color 5 (red) */
-  --radius: 0.5rem; /* Rounded corners */
-  --sidebar: oklch(0.145 0 0); /* Sidebar background */
-  --sidebar-foreground: oklch(0.985 0 0); /* Sidebar text */
-  --sidebar-primary: oklch(0.269 0 0); /* Sidebar primary sections */
-  --sidebar-primary-foreground: oklch(0.985 0 0); /* Sidebar primary text */
-  --sidebar-accent: oklch(0.646 0.222 264.376); /* Sidebar accent */
-  --sidebar-accent-foreground: oklch(0.985 0 0); /* Sidebar accent text */
-  --sidebar-border: oklch(0.439 0 0); /* Sidebar borders */
-  --sidebar-ring: oklch(0.646 0.222 264.376); /* Sidebar focus ring */
+  --background: oklch(0.145 0 0);
+  /* Dark theme main background */
+  --foreground: oklch(0.985 0 0);
+  /* Primary text color (white) */
+  --card: oklch(0.269 0 0);
+  /* Card backgrounds (gray-700) */
+  --card-foreground: oklch(0.985 0 0);
+  /* Card text color */
+  --popover: oklch(0.269 0 0);
+  /* Popover backgrounds */
+  --popover-foreground: oklch(0.985 0 0);
+  /* Popover text */
+  --primary: oklch(0.646 0.222 264.376);
+  /* Blue accent for CTAs */
+  --primary-foreground: oklch(0.985 0 0);
+  /* White text on primary */
+  --secondary: oklch(0.985 0 0);
+  /* Light backgrounds */
+  --secondary-foreground: oklch(0.145 0 0);
+  /* Dark text on light */
+  --muted: oklch(0.97 0 0);
+  /* Muted backgrounds */
+  --muted-foreground: oklch(0.269 0 0);
+  /* Muted text */
+  --accent: oklch(0.696 0.17 162.48);
+  /* Green for positive indicators */
+  --accent-foreground: oklch(0.985 0 0);
+  /* White text on accent */
+  --destructive: oklch(0.627 0.265 27.325);
+  /* Red for errors */
+  --destructive-foreground: oklch(0.985 0 0);
+  /* White text on destructive */
+  --border: oklch(0.439 0 0);
+  /* Border color */
+  --input: oklch(0.269 0 0);
+  /* Input backgrounds */
+  --ring: oklch(0.646 0.222 264.376);
+  /* Focus ring (blue) */
+  --chart-1: oklch(0.646 0.222 264.376);
+  /* Chart color 1 (blue) */
+  --chart-2: oklch(0.6 0.118 264.376);
+  /* Chart color 2 (lighter blue) */
+  --chart-3: oklch(0.696 0.17 162.48);
+  /* Chart color 3 (green) */
+  --chart-4: oklch(0.769 0.188 70.08);
+  /* Chart color 4 (yellow) */
+  --chart-5: oklch(0.627 0.265 27.325);
+  /* Chart color 5 (red) */
+  --radius: 0.5rem;
+  /* Rounded corners */
+  --sidebar: oklch(0.145 0 0);
+  /* Sidebar background */
+  --sidebar-foreground: oklch(0.985 0 0);
+  /* Sidebar text */
+  --sidebar-primary: oklch(0.269 0 0);
+  /* Sidebar primary sections */
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  /* Sidebar primary text */
+  --sidebar-accent: oklch(0.646 0.222 264.376);
+  /* Sidebar accent */
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  /* Sidebar accent text */
+  --sidebar-border: oklch(0.439 0 0);
+  /* Sidebar borders */
+  --sidebar-ring: oklch(0.646 0.222 264.376);
+  /* Sidebar focus ring */
 }
 
 .dark {
@@ -119,7 +153,21 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html,
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    position: relative;
+  }
+
+  /* Prevent any element from extending beyond viewport width */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
