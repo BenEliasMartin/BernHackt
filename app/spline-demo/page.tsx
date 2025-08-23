@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import SplineSprite, { DefaultSplineSprite } from "@/components/SplineSprite"
@@ -178,7 +176,6 @@ export default function SplineDemoPage() {
                             sceneUrl="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode"
                             size="lg"
                             onLoad={() => console.log('Custom scene loaded!')}
-                            onError={(error) => console.error('Custom scene error:', error)}
                         />
                         <p className="text-sm text-slate-600 mt-4">
                             Using a custom scene URL with event handlers
@@ -217,7 +214,6 @@ export default function SplineDemoPage() {
   size="custom"
   customSize={{ width: 300, height: 200 }}
   onLoad={() => console.log('Loaded!')}
-  onError={(error) => console.error(error)}
 />`}
                             </pre>
                         </div>

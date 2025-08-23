@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Square, Loader2 } from 'lucide-react';
 import { AudioRecorder, VoiceService, TranscriptionResult } from '@/lib/voice-services';

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic } from "lucide-react";
-import Spline from "@splinetool/react-spline";
 import { VoiceInput } from "./VoiceInput";
 import { VoiceOutput } from "./VoiceOutput";
 import { useVoice } from "@/contexts/VoiceContext";
+import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
 
 interface VoiceModeProps {
     isActive: boolean;
@@ -26,33 +26,133 @@ const ANIMATION_CONFIG = {
 };
 
 export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
-    const [transcribedText, setTranscribedText] = useState("");
+    const [isListening, setIsListening] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [aiResponse, setAiResponse] = useState("");
-    const [isSplineLoaded, setIsSplineLoaded] = useState(false);
+    const voiceOutputRef = useRef<HTMLDivElement>(null);
 
     // Voice functionality
     const { voiceService, isVoiceEnabled } = useVoice();
 
-    const handleVoiceInput = (text: string) => {
-        setTranscribedText(text);
-
-        // Simulate AI response for demo purposes
-        // In a real app, this would call your AI service
-        const mockResponse = `Ich habe verstanden: "${text}". Das ist eine interessante Frage zu deinen Finanzen.`;
-        setAiResponse(mockResponse);
-
-        // Auto-speak the response if voice is enabled
-        if (isVoiceEnabled && voiceService) {
-            // The VoiceOutput component will handle the actual speaking
+    // Auto-trigger speech when speaking state becomes true
+    useEffect(() => {
+        if (isSpeaking && voiceOutputRef.current && aiResponse) {
+            // Find the play button and click it automatically
+            const playButton = voiceOutputRef.current.querySelector('button');
+            if (playButton) {
+                setTimeout(() => {
+                    playButton.click();
+                }, 100);
+            }
         }
+    }, [isSpeaking, aiResponse]);
+
+    // Monitor audio completion
+    useEffect(() => {
+        if (isSpeaking && voiceOutputRef.current) {
+            const audioElement = voiceOutputRef.current.querySelector('audio');
+            if (audioElement) {
+                const handleAudioEnded = () => {
+                    setIsSpeaking(false);
+                    setAiResponse("");
+                };
+
+                audioElement.addEventListener('ended', handleAudioEnded);
+                return () => audioElement.removeEventListener('ended', handleAudioEnded);
+            }
+        }
+    }, [isSpeaking]);
+
+    const processUserMessage = async (message: string) => {
+        setIsListening(false);
+        setIsProcessing(true);
+
+        try {
+            // Prepare messages for OpenAI with tools
+            const aiMessages = [
+                {
+                    role: 'system' as const,
+                    content: `Du bist ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
+
+1. Monatliche Budget-Widgets generieren, wenn Benutzer nach ihrem Budgetstatus, verbleibendem Geld oder Ausgaben fragen
+2. Zinseszins für Investitionsplanung berechnen
+3. Monatliche Zahlungen für Kredite und Hypotheken berechnen
+4. Persönliche Finanzberatung anbieten
+
+WICHTIG: Halte deine Antworten prägnant und fokussiert. Wenn Benutzer nach Budgets, Ausgaben oder Finanzstatus fragen:
+- Verwende das generateMonthlyBudgetWidget-Tool, um die Daten visuell anzuzeigen
+- Gib NUR eine kurze, relevante Antwort (max. 1-2 Sätze)
+- Wiederhole NICHT alle Zahlen oder Details im Text, da das Widget sie anzeigt
+- Konzentriere dich auf Erkenntnisse, nicht auf Datenwiederholung
+
+Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit auf Kurs mit 65% deines verbrauchten Budgets."`
+                },
+                {
+                    role: 'user' as const,
+                    content: message
+                }
+            ];
+
+            // Call OpenAI API with tools
+            const response: OpenAIToolsResponse = await callOpenAIWithTools(aiMessages);
+
+            // Check if any tools were called
+            if (response.toolCalls && response.toolCalls.length > 0) {
+                // Process tool calls and create a rich message with the widget
+                for (const toolCall of response.toolCalls) {
+                    if (toolCall.function.name === 'generateMonthlyBudgetWidget') {
+                        try {
+                            const args = JSON.parse(toolCall.function.arguments);
+                            // For now, just use the response text since we can't display widgets in voice mode
+                            setAiResponse(response.message.content || "Hier ist deine Budgetübersicht für diesen Monat.");
+                            setIsSpeaking(true);
+                            return;
+                        } catch (error) {
+                            console.error('Error parsing tool arguments:', error);
+                        }
+                    }
+                }
+            }
+
+            // Set AI response for voice output
+            setAiResponse(response.message.content || 'Ich entschuldige mich, aber ich konnte zu diesem Zeitpunkt keine Antwort generieren.');
+            setIsSpeaking(true);
+
+        } catch (error) {
+            console.error('Error calling OpenAI API:', error);
+            setAiResponse('Entschuldigung, ich bin auf einen Fehler gestoßen. Bitte versuche es erneut.');
+            setIsSpeaking(true);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const handleVoiceInput = (text: string) => {
+        // Process the transcribed text through OpenAI API
+        processUserMessage(text);
     };
 
     const handleVoiceError = (error: string) => {
         console.error('Voice input error:', error);
+        setIsListening(false);
     };
 
-    const handleSplineLoad = () => {
-        setIsSplineLoaded(true);
+    const handleVoiceOutputComplete = () => {
+        setIsSpeaking(false);
+        setAiResponse("");
+    };
+
+    const handleCircleClick = () => {
+        if (isVoiceEnabled && voiceService && !isSpeaking && !isProcessing) {
+            if (isListening) {
+                // Stop listening if already listening
+                setIsListening(false);
+            } else {
+                // Start listening if not listening
+                setIsListening(true);
+            }
+        }
     };
 
     return (
@@ -85,7 +185,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 </motion.button>
                             </motion.div>
 
-                            {/* Spline Sprite */}
+                            {/* Interactive Pulsating Circle */}
                             <motion.div
                                 className="flex justify-center mb-8"
                                 initial={{ opacity: 0, scale: 0.8 }}
@@ -93,85 +193,93 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 transition={{ delay: 0.2, duration: ANIMATION_CONFIG.duration.medium }}
                             >
                                 <div className="relative">
-                                    {!isSplineLoaded && (
-                                        <motion.div
-                                            className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center"
-                                            animate={{
-                                                scale: [1, 1.1, 1],
-                                                opacity: [0.7, 1, 0.7]
-                                            }}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                                ease: "easeInOut"
-                                            }}
-                                        >
-                                            <div className="text-center">
-                                                <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 animate-pulse" />
-                                                <p className="text-xs text-blue-600 font-medium">Loading...</p>
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    <div className="w-48 h-48">
-                                        <Spline
-                                            scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode"
-                                            onLoad={handleSplineLoad}
-                                            onError={(error) => console.error('Spline error:', error)}
-                                        />
-                                    </div>
+                                    <motion.div
+                                        className={`w-48 h-48 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${isListening
+                                            ? 'bg-gradient-to-br from-red-100 to-pink-100'
+                                            : isSpeaking
+                                                ? 'bg-gradient-to-br from-green-100 to-blue-100'
+                                                : isProcessing
+                                                    ? 'bg-gradient-to-br from-yellow-100 to-orange-100'
+                                                    : 'bg-gradient-to-br from-blue-100 to-purple-100'
+                                            }`}
+                                        animate={{
+                                            scale: isListening
+                                                ? [1, 1.2, 1]
+                                                : isSpeaking
+                                                    ? [1, 1.05, 1]
+                                                    : isProcessing
+                                                        ? [1, 1.15, 1]
+                                                        : [1, 1.1, 1],
+                                            opacity: isListening
+                                                ? [0.8, 1, 0.8]
+                                                : isSpeaking
+                                                    ? [0.9, 1, 0.9]
+                                                    : isProcessing
+                                                        ? [0.7, 1, 0.7]
+                                                        : [0.7, 1, 0.7]
+                                        }}
+                                        transition={{
+                                            duration: isListening ? 1 : isSpeaking ? 1.5 : isProcessing ? 0.8 : 2,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleCircleClick}
+                                    >
+                                        <div className="text-center">
+                                            {isListening ? (
+                                                <>
+                                                    <motion.div
+                                                        className="w-8 h-8 bg-red-500 rounded-full mx-auto mb-2"
+                                                        animate={{ scale: [1, 1.3, 1] }}
+                                                        transition={{ duration: 0.8, repeat: Infinity }}
+                                                    />
+                                                    <p className="text-xs text-red-600 font-medium">Listening...</p>
+                                                </>
+                                            ) : isSpeaking ? (
+                                                <>
+                                                    <motion.div
+                                                        className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2"
+                                                        animate={{ scale: [1, 1.2, 1] }}
+                                                        transition={{ duration: 1.2, repeat: Infinity }}
+                                                    />
+                                                    <p className="text-xs text-green-600 font-medium">Speaking...</p>
+                                                </>
+                                            ) : isProcessing ? (
+                                                <>
+                                                    <motion.div
+                                                        className="w-8 h-8 bg-yellow-500 rounded-full mx-auto mb-2"
+                                                        animate={{ scale: [1, 1.2, 1] }}
+                                                        transition={{ duration: 0.8, repeat: Infinity }}
+                                                    />
+                                                    <p className="text-xs text-yellow-600 font-medium">Processing...</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 animate-pulse" />
+                                                    <p className="text-xs text-blue-600 font-medium">Tap to Speak</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </motion.div>
                                 </div>
                             </motion.div>
 
-                            {/* Voice Input */}
-                            <motion.div
-                                className="flex justify-center mb-6"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3, duration: ANIMATION_CONFIG.duration.medium }}
-                            >
-                                {isVoiceEnabled && voiceService ? (
-                                    <VoiceInput
-                                        onTranscriptionComplete={handleVoiceInput}
-                                        onError={handleVoiceError}
-                                        voiceService={voiceService}
-                                        disabled={false}
-                                    />
-                                ) : (
-                                    <div className="text-center text-gray-500 py-4">
-                                        <Mic className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                                        <p className="text-sm">Voice service not available</p>
-                                    </div>
-                                )}
-                            </motion.div>
+                            {/* Hidden Voice Components */}
+                            {isVoiceEnabled && voiceService && (
+                                <>
+                                    {isListening && (
+                                        <VoiceInput
+                                            onTranscriptionComplete={handleVoiceInput}
+                                            onError={handleVoiceError}
+                                            voiceService={voiceService}
+                                            disabled={false}
+                                        />
+                                    )}
 
-                            {/* Transcribed Text */}
-                            {transcribedText && (
-                                <motion.div
-                                    className="bg-gray-50 rounded-lg p-4 mb-4"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <p className="text-sm text-gray-600 mb-1">You said:</p>
-                                    <p className="text-gray-900 font-medium">{transcribedText}</p>
-                                </motion.div>
-                            )}
-
-                            {/* AI Response */}
-                            {aiResponse && (
-                                <motion.div
-                                    className="bg-blue-50 rounded-lg p-4 mb-4"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <p className="text-sm text-gray-600 mb-1">AI Response:</p>
-                                    <p className="text-gray-900">{aiResponse}</p>
-
-                                    {/* Auto-speak the response */}
-                                    {isVoiceEnabled && voiceService && (
-                                        <div className="mt-3">
+                                    {isSpeaking && (
+                                        <div ref={voiceOutputRef}>
                                             <VoiceOutput
                                                 text={aiResponse}
                                                 voiceService={voiceService}
@@ -179,7 +287,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                             />
                                         </div>
                                     )}
-                                </motion.div>
+                                </>
                             )}
 
                             {/* Quick Actions */}
