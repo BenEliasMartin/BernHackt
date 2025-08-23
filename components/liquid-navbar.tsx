@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Home, MessageCircle } from "lucide-react"
+import React, { useMemo, useEffect, useState } from "react"
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { IoHome, IoChatbubbleEllipses } from "react-icons/io5"
 import { LiquidGlass } from '@specy/liquid-glass-react';
-
 
 export interface NavItem {
   id: string
@@ -13,8 +12,8 @@ export interface NavItem {
 }
 
 const DEFAULT_ITEMS: NavItem[] = [
-  { id: "dashboard", icon: Home, label: "Dashboard" },
-  { id: "agent", icon: MessageCircle, label: "Agent" },
+  { id: "dashboard", icon: IoHome, label: "Dashboard" },
+  { id: "agent", icon: IoChatbubbleEllipses, label: "Agent" },
 ]
 
 export interface LiquidNavbarProps {
@@ -31,8 +30,37 @@ function classNames(...xs: Array<string | false | null | undefined>) {
 export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, className }: LiquidNavbarProps) {
   // roving focus for keyboard nav
   const buttonsRef = React.useRef<Record<string, HTMLButtonElement | null>>({})
+  const navbarRef = React.useRef<HTMLDivElement>(null)
+
+  // Smooth tracking of viewport changes
+  const [viewportWidth, setViewportWidth] = useState(0)
+  const x = useMotionValue(0)
+  const smoothX = useSpring(x, { damping: 25, stiffness: 200 })
 
   const currentIndex = Math.max(0, items.findIndex((i) => i.id === activeTab))
+
+  // Track viewport changes and adjust position
+  useEffect(() => {
+    const updatePosition = () => {
+      const newWidth = window.innerWidth
+      setViewportWidth(newWidth)
+
+      // Center the navbar based on viewport
+      // Use actual measured width if available, otherwise estimate
+      const navbarWidth = navbarRef.current?.offsetWidth || 280 // Estimate for smaller navbar
+      const centerOffset = (newWidth - navbarWidth) / 2 // True center position
+      x.set(centerOffset < 24 ? 24 : centerOffset) // Minimum 24px from edge
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition)
+    }
+  }, [x])
 
   const focusByIndex = (idx: number) => {
     const safeIdx = ((idx % items.length) + items.length) % items.length
@@ -55,95 +83,105 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
   }
 
   const glassStyle = useMemo(() => ({
-    depth: 20,
-    segments: 88,
-    radius: 10,
+    depth: 0,
+    segments: 150,
+    radius: 50,
     tint: null,
-    reflectivity: 0.9,
-    thickness: 50,
-    dispersion: 5,
-    roughness: 0.2,
+    reflectivity: 0.98,
+    thickness: 80,
+    dispersion: 2,
+    roughness: 0.1,
   }), []);
 
-
-
-
   return (
-    <div className={classNames(
-      "fixed bottom-10 left-0 right-0 p-4 z-50",
-      className
-    )}>
-      <div className="max-w-md mx-auto grid place-items-center rounded-b-xl">
-        <LiquidGlass
-          glassStyle={glassStyle}
-          wrapperStyle={{
-            position: 'fixed',
-            bottom: 10,
-            left: 0,
-            right: 0,
-            width: 'fit-content',
-            margin: '0 auto',
-          }}
-        >
+    <motion.div
+      className={classNames(
+        "fixed bottom-4 z-[2147483647]",
+        className
+      )}
+      style={{
+        x: smoothX,
+        left: 0,
+      }}
+    >
+      <LiquidGlass
+        glassStyle={glassStyle}
+        wrapperStyle={{
+          position: 'relative',
+          borderRadius: '50px',
+          background: 'rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+          width: 'fit-content',
+          zIndex: 2147483647,
+        }}
+      >
+        <div className="px-6 py-3" ref={navbarRef}>
+          <nav role="tablist" aria-label="Primary" onKeyDown={onKeyDown}>
+            <div className="relative flex items-center gap-6">
+              {items.map((item) => {
+                const isActive = activeTab === item.id
+                const Icon = item.icon
 
-          <div className="p-4 rounded-3xl">
-            <nav role="tablist" aria-label="Primary" onKeyDown={onKeyDown}>
-              <div className="relative flex items-center gap-4">
-                {items.map((item) => {
-                  const isActive = activeTab === item.id
-                  const Icon = item.icon
-
-                  return (
-                    <motion.button
-                      key={item.id}
-                      ref={(el) => {
-                        buttonsRef.current[item.id] = el
-                      }}
-                      role="tab"
-                      aria-selected={isActive}
-                      aria-current={isActive ? "page" : undefined}
-                      onClick={() => onTabChange(item.id)}
-                      className={classNames(
-                        "relative isolate h-16 w-16 rounded-3xl outline-none",
-                        "flex items-center justify-center",
-                        "transition-[transform,opacity] duration-200",
-                        "focus-visible:ring-2 focus-visible:ring-white/80",
-                        isActive ? "text-white" : "text-gray-600 dark:text-gray-300"
+                return (
+                  <motion.button
+                    key={item.id}
+                    ref={(el) => {
+                      buttonsRef.current[item.id] = el
+                    }}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() => onTabChange(item.id)}
+                    className={classNames(
+                      "relative isolate px-4 py-2 rounded-full outline-none",
+                      "flex flex-col items-center justify-center gap-1",
+                      "transition-all duration-300 ease-out",
+                      "focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                    )}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {isActive && (
+                        <motion.span
+                          layoutId="activeTab"
+                          className="absolute inset-0 -z-10 rounded-full bg-blue-500/20"
+                          style={{
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                          }}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30
+                          }}
+                        />
                       )}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      <AnimatePresence mode="popLayout">
-                        {isActive && (
-                          <motion.span
-                            layoutId="activeTab"
-                            className="absolute inset-0 -z-10 rounded-3xl bg-gray-900/90"
-                            initial={{ opacity: 0.0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                          />
-                        )}
-                      </AnimatePresence>
+                    </AnimatePresence>
 
-                      <Icon className={classNames("h-7 w-7", isActive ? "text-white" : "text-gray-600 dark:text-gray-300")} />
-                    </motion.button>
-                  )
-                })}
-              </div>
-            </nav>
-          </div>
-        </LiquidGlass>
-      </div>
-    </div >
+                    <Icon className={classNames(
+                      "h-5 w-5 transition-all duration-300 ease-out",
+                      isActive ? "text-blue-600" : "text-gray-700"
+                    )} />
+
+                    <span className={classNames(
+                      "text-xs font-medium transition-all duration-300 ease-out",
+                      isActive ? "text-blue-600" : "text-gray-700"
+                    )}>
+                      {item.label}
+                    </span>
+                  </motion.button>
+                )
+              })}
+            </div>
+          </nav>
+        </div>
+      </LiquidGlass>
+    </motion.div>
   )
 }
 
 export default LiquidNavbar
-
-/*
-USAGE
------
-const [tab, setTab] = React.useState("dashboard")
-<LiquidNavbar activeTab={tab} onTabChange={setTab} />
-*/

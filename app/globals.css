@@ -154,20 +154,21 @@
     @apply border-border outline-ring/50;
   }
 
-  html,
-  body {
-    @apply bg-background text-foreground;
+  html {
     overflow-x: hidden;
-    max-width: 100vw;
+    width: 100%;
   }
 
   body {
-    position: relative;
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   /* Prevent any element from extending beyond viewport width */
   * {
-    max-width: 100%;
     box-sizing: border-box;
   }
 }

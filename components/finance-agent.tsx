@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LiquidGlass } from "@specy/liquid-glass-react";
+import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
 
 import {
   MessageCircle,
@@ -78,7 +79,7 @@ const itemVariants = {
 interface ChatMessage {
   id: string;
   content: React.ReactNode;
-  sender: 'user' | 'other';
+  sender: 'user' | 'assistant';
   timestamp: Date;
 }
 
@@ -86,6 +87,7 @@ export function FinanceAgent() {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -121,8 +123,8 @@ export function FinanceAgent() {
     if (messages.length === 0) {
       setMessages([{
         id: '1',
-        content: 'Hello! How can I help you with your finances today?',
-        sender: 'other',
+        content: 'Hello! I\'m your AI financial assistant. I can help you with:\n\n• Investment calculations (compound interest)\n• Loan and mortgage calculations\n• Financial planning and advice\n• Budgeting and savings strategies\n\nWhat would you like to know about your finances today?',
+        sender: 'assistant',
         timestamp: new Date()
       }]);
     }
@@ -142,25 +144,99 @@ export function FinanceAgent() {
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const pushOtherMessage = (content: React.ReactNode) => {
+  const pushAssistantMessage = (content: React.ReactNode) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       content,
-      sender: 'other',
+      sender: 'assistant',
       timestamp: new Date()
     };
     setMessages(prev => [...prev, newMessage]);
   };
 
+  const updateMessage = (id: string, content: React.ReactNode) => {
+    setMessages(prev => prev.map(msg =>
+      msg.id === id ? { ...msg, content } : msg
+    ));
+  };
+
+  const callAI = async (userMessage: string) => {
+    try {
+      setIsProcessing(true);
+
+      // Add loading message
+      const loadingId = Date.now().toString();
+      const loadingMessage: ChatMessage = {
+        id: loadingId,
+        content: '🤔 Thinking...',
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, loadingMessage]);
+
+      // Prepare messages for OpenAI
+      const aiMessages = [
+        {
+          role: 'system' as const,
+          content: `You are a specialized AI financial assistant with access to powerful financial calculation tools. You can:
+
+1. Calculate compound interest for investment planning
+2. Calculate monthly payments for loans and mortgages
+3. Provide personalized financial advice
+4. Help with budgeting and financial planning
+5. Answer questions about investments, savings, and debt management
+
+When users ask for financial calculations, use the appropriate tools to provide accurate results. Always explain the calculations and provide actionable insights. Be professional, helpful, and focus on practical financial guidance.`
+        },
+        ...messages.map(msg => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: typeof msg.content === 'string' ? msg.content : 'Message content'
+        })),
+        {
+          role: 'user' as const,
+          content: userMessage
+        }
+      ];
+
+      // Call OpenAI API
+      const response: OpenAIToolsResponse = await callOpenAIWithTools(aiMessages);
+
+      // Update the loading message with the real response
+      const responseContent = response.message.content || 'I apologize, but I couldn\'t generate a response at this time.';
+      updateMessage(loadingId, responseContent);
+
+    } catch (error) {
+      console.error('Error calling AI:', error);
+
+      // Update loading message with error
+      const errorMessage = 'Sorry, I encountered an error while processing your request. Please try again.';
+      if (messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.content === '🤔 Thinking...') {
+          updateMessage(lastMessage.id, errorMessage);
+        }
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
+    pushUserMessage(suggestion);
     setShowSuggestions(false);
+    callAI(suggestion);
   };
 
   const handleSendMessage = () => {
-    if (!input.trim()) return;
-    setShowSuggestions(false);
+    if (!input.trim() || isProcessing) return;
+
+    const userMessage = input.trim();
+    pushUserMessage(userMessage);
     setInput("");
+    setShowSuggestions(false);
+
+    // Call AI with the user message
+    callAI(userMessage);
   };
 
   const handleInputFocus = () => {
@@ -244,32 +320,20 @@ export function FinanceAgent() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter' && input.trim()) {
-                      pushUserMessage(input.trim());
-                      setInput('');
-                      // Simulate bot response after a delay
-                      setTimeout(() => {
-                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
-                      }, 1000);
+                    if (e.key === 'Enter' && input.trim() && !isProcessing) {
+                      handleSendMessage();
                     }
                   }}
-                  placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={isProcessing ? "AI is thinking..." : "Type your message..."}
+                  disabled={isProcessing}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
-                  onClick={() => {
-                    if (input.trim()) {
-                      pushUserMessage(input.trim());
-                      setInput('');
-                      // Simulate bot response after a delay
-                      setTimeout(() => {
-                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
-                      }, 1000);
-                    }
-                  }}
+                  onClick={handleSendMessage}
                   className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  disabled={isProcessing}
                 >
-                  <SendHorizonal />
+                  {isProcessing ? 'Processing...' : <SendHorizonal />}
                 </button>
               </div>
             </div>
@@ -337,10 +401,10 @@ export function FinanceAgent() {
                       animate="visible"
                     >
                       {[
-                        { icon: Coffee, text: "Show me my coffee spending" },
-                        { icon: BarChart3, text: "Weekly spending breakdown" },
-                        { icon: Home, text: "How's my savings goal?" },
-                        { icon: CreditCard, text: "Recent transactions" },
+                        { icon: BarChart3, text: "Calculate compound interest on $10,000 at 7% for 10 years" },
+                        { icon: Home, text: "What's my monthly payment on a $300,000 mortgage at 4.5% for 30 years?" },
+                        { icon: CreditCard, text: "Help me create a budget plan" },
+                        { icon: Coffee, text: "Investment advice for beginners" },
                       ].map((suggestion, index) => (
                         <motion.div key={index} variants={itemVariants}>
                           <Button
