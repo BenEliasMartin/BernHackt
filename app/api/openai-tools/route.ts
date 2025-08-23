@@ -5,10 +5,6 @@ import OpenAI from "openai";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-// Import our custom tool functions
-import { getWeatherData } from "../tools/weather";
-
 // Define available tools
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
@@ -134,9 +130,8 @@ export async function POST(request: NextRequest) {
               tool_call_id: toolCall.id,
               role: "tool" as const,
               content: JSON.stringify({
-                error: `Failed to execute ${toolCall.function.name}: ${
-                  error instanceof Error ? error.message : "Unknown error"
-                }`,
+                error: `Failed to execute ${toolCall.function.name}: ${error instanceof Error ? error.message : "Unknown error"
+                  }`,
               }),
             };
           }
