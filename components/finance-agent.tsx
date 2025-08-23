@@ -1,14 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Mic, MessageCircle, Coffee, BarChart3, Home, CreditCard } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { BalanceWidget } from "@/components/widgets/balance-widget"
-import { ChallengeWidget } from "@/components/widgets/challenge-widget"
-import { GoalsWidget } from "@/components/widgets/goals-widget"
-import { NewsWidget } from "@/components/widgets/news-widget"
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { LiquidGlass } from "@specy/liquid-glass-react";
+
+import {
+  MessageCircle,
+  Coffee,
+  BarChart3,
+  Home,
+  CreditCard,
+  SendHorizonal,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ANIMATION_CONFIG = {
   spring: {
@@ -27,7 +32,7 @@ const ANIMATION_CONFIG = {
     slow: 0.8,
   },
   easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
-}
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,7 +50,7 @@ const containerVariants = {
       staggerDirection: -1,
     },
   },
-}
+};
 
 const itemVariants = {
   hidden: {
@@ -68,327 +73,308 @@ const itemVariants = {
       ease: ANIMATION_CONFIG.easing,
     },
   },
-}
+};
 
-interface Widget {
-  id: string
-  type: "balance" | "challenge" | "goals" | "news"
-  data?: any
-}
-
-const mockData = {
-  balance: 11847.5,
-  growth: 2.3,
-  chartData: [45, 32, 68, 41, 72, 58, 49],
-  spending: {
-    categories: [
-      { name: "Coffee & Dining", amount: 420, percentage: 35, color: "bg-gray-900" },
-      { name: "Transportation", amount: 280, percentage: 23, color: "bg-gray-700" },
-      { name: "Shopping", amount: 240, percentage: 20, color: "bg-gray-600" },
-      { name: "Entertainment", amount: 180, percentage: 15, color: "bg-gray-500" },
-      { name: "Other", amount: 80, percentage: 7, color: "bg-gray-400" },
-    ],
-    total: 1200,
-  },
-  houseGoal: {
-    target: 50000,
-    current: 11847.5,
-    monthlyContribution: 800,
-    estimatedMonths: 48,
-  },
-}
-
-const analyzeUserIntent = (input: string): Widget[] => {
-  const lowerInput = input.toLowerCase()
-
-  // Coffee/savings related queries
-  if (lowerInput.match(/(coffee|save|saving|challenge|spend less|cut costs|reduce|cheaper|alternative)/)) {
-    return [{ id: "challenge", type: "challenge" }]
-  }
-
-  // Debt related queries
-  if (lowerInput.match(/(debt|paydown|pay off|loan|credit card|owe|repay|interest|debt free)/)) {
-    return [{ id: "balance", type: "balance", data: { activeTab: "debt" } }]
-  }
-
-  // Spending/budget related queries - redirect to balance widget
-  if (lowerInput.match(/(spending|spend|budget|expense|cost|money|category|breakdown|pattern|where.*money|how much)/)) {
-    return [{ id: "balance", type: "balance", data: { activeTab: "budget" } }]
-  }
-
-  // Goals related queries
-  if (lowerInput.match(/(goal|house|home|target|reach|achieve|timeline|when|how long|progress|down payment)/)) {
-    return [{ id: "goals", type: "goals" }]
-  }
-
-  // Balance/portfolio related queries
-  if (lowerInput.match(/(balance|portfolio|total|worth|assets|investment|growth|performance|overview)/)) {
-    return [{ id: "balance", type: "balance" }]
-  }
-
-  // News related queries
-  if (lowerInput.match(/(news|updates|latest|information)/)) {
-    return [{ id: "news", type: "news" }]
-  }
-
-  // Multiple widgets for comprehensive queries
-  if (lowerInput.match(/(overview|summary|everything|all|dashboard|complete|full)/)) {
-    return [
-      { id: "balance", type: "balance" },
-      { id: "goals", type: "goals" },
-      { id: "news", type: "news" },
-    ]
-  }
-
-  // Default to balance for unclear queries
-  return [{ id: "balance", type: "balance" }]
+interface ChatMessage {
+  id: string;
+  content: React.ReactNode;
+  sender: 'user' | 'other';
+  timestamp: Date;
 }
 
 export function FinanceAgent() {
-  const [widgets, setWidgets] = useState<Widget[]>([{ id: "balance", type: "balance" }])
-  const [input, setInput] = useState("")
-  const [isListening, setIsListening] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const glassStyle = useRef({
+    depth: 16,
+    segments: 30,
+    radius: 16,
+    tint: null,
+    reflectivity: 0.92,
+    thickness: 27,
+    dispersion: 10,
+    roughness: 0,
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (chatContainerRef.current && !chatContainerRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false)
+      if (
+        chatContainerRef.current &&
+        !chatContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Add initial message after component mounts to avoid hydration mismatch
+    if (messages.length === 0) {
+      setMessages([{
+        id: '1',
+        content: 'Hello! How can I help you with your finances today?',
+        sender: 'other',
+        timestamp: new Date()
+      }]);
     }
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const pushUserMessage = (content: React.ReactNode) => {
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
+
+  const pushOtherMessage = (content: React.ReactNode) => {
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content,
+      sender: 'other',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion)
-    setShowSuggestions(false)
-
-    setTimeout(() => {
-      const newWidgets = analyzeUserIntent(suggestion)
-      setWidgets(newWidgets)
-    }, 150)
-  }
+    setInput(suggestion);
+    setShowSuggestions(false);
+  };
 
   const handleSendMessage = () => {
-    if (!input.trim()) return
-
-    setShowSuggestions(false)
-
-    const newWidgets = analyzeUserIntent(input)
-    setWidgets(newWidgets)
-
-    setInput("")
-  }
+    if (!input.trim()) return;
+    setShowSuggestions(false);
+    setInput("");
+  };
 
   const handleInputFocus = () => {
-    setShowSuggestions(true)
-  }
+    setShowSuggestions(true);
+  };
 
   const handleChatButtonClick = () => {
-    setShowSuggestions(true)
-  }
-
-  const renderWidget = (widget: Widget) => {
-    const widgetVariants = {
-      hidden: {
-        opacity: 0,
-        y: 30,
-        scale: 0.96,
-        filter: "blur(8px)",
-      },
-      visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        filter: "blur(0px)",
-        transition: {
-          ...ANIMATION_CONFIG.spring,
-          duration: ANIMATION_CONFIG.duration.medium,
-        },
-      },
-      exit: {
-        opacity: 0,
-        y: -20,
-        scale: 0.98,
-        filter: "blur(4px)",
-        transition: {
-          duration: ANIMATION_CONFIG.duration.fast,
-          ease: ANIMATION_CONFIG.easing,
-        },
-      },
-    }
-
-    switch (widget.type) {
-      case "balance":
-        return (
-          <motion.div key={widget.id} variants={widgetVariants} initial="hidden" animate="visible" exit="exit" layout>
-            <BalanceWidget initialTab={widget.data?.activeTab} />
-          </motion.div>
-        )
-
-
-
-      case "goals":
-        return (
-          <motion.div key={widget.id} variants={widgetVariants} initial="hidden" animate="visible" exit="exit" layout>
-            <GoalsWidget />
-          </motion.div>
-        )
-
-      case "challenge":
-        return (
-          <motion.div key={widget.id} variants={widgetVariants} initial="hidden" animate="visible" exit="exit" layout>
-            <ChallengeWidget />
-          </motion.div>
-        )
-
-      case "news":
-        return (
-          <motion.div key={widget.id} variants={widgetVariants} initial="hidden" animate="visible" exit="exit" layout>
-            <NewsWidget />
-          </motion.div>
-        )
-
-      default:
-        return null
-    }
-  }
+    setShowSuggestions(true);
+  };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto p-6 space-y-8">
-        <motion.div
-          className="pt-12 pb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: ANIMATION_CONFIG.duration.medium,
-            ease: ANIMATION_CONFIG.easing,
-          }}
-        >
-          <h1 className="text-3xl font-extralight text-gray-900 mb-2 tracking-tight">Good morning, Alex</h1>
-          <p className="text-gray-500 text-sm">Your intelligent finance assistant</p>
-        </motion.div>
-
-        <AnimatePresence mode="wait">
-          <div className="space-y-6">{widgets.map(renderWidget)}</div>
-        </AnimatePresence>
-
-
-
-        <div className="mb-32">
-          <div className="max-w-md mx-auto space-y-4" ref={chatContainerRef}>
-            <AnimatePresence>
-              {showSuggestions && (
-                <motion.div
-                  className="bg-white shadow-lg rounded-2xl p-6 border-0"
-                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                  transition={ANIMATION_CONFIG.spring}
-                >
-                  <motion.h3
-                    className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    SUGGESTED QUESTIONS
-                  </motion.h3>
-                  <motion.div className="space-y-3" variants={containerVariants} initial="hidden" animate="visible">
-                    {[
-                      { icon: Coffee, text: "How can I save more on coffee?" },
-                      { icon: BarChart3, text: "Show me my spending patterns" },
-                      { icon: Home, text: "When will I reach my house goal?" },
-                      { icon: CreditCard, text: "Show me my debt paydown plan" },
-                    ].map((suggestion, index) => (
-                      <motion.div key={index} variants={itemVariants}>
-                        <motion.div
-                          whileHover={{ scale: 1.02, x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                          transition={ANIMATION_CONFIG.springSoft}
-                        >
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start gap-4 h-auto p-4 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl border-0"
-                            onClick={() => handleSuggestionClick(suggestion.text)}
-                          >
-                            <suggestion.icon className="h-4 w-4 text-gray-500" />
-                            <span className="text-gray-900 text-sm font-medium">{suggestion.text}</span>
-                          </Button>
-                        </motion.div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-
-            <motion.div
-              className="flex gap-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: 0.4,
-                ...ANIMATION_CONFIG.spring,
-              }}
+    <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
+        <div className="max-w-md mx-auto p-6 space-y-8">
+          {/* Header */}
+          <motion.div
+            className="pt-8 pb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: ANIMATION_CONFIG.duration.medium,
+              ease: ANIMATION_CONFIG.easing,
+            }}
+          >
+            <h1 className="text-5xl font-extrabold tracking-tighter text-gray-900 mb-1">
+              Your Financial Assistant
+            </h1>
+            <br></br>
+            <motion.button
+              className="text-white text-lg cursor-pointer font-bold tracking-tight rounded-full px-4 py-2 bg-blue-600"
+              whileTap={{ scale: 0.9 }}
             >
-              <div className="flex-1 relative">
-                <Input
+              View
+            </motion.button>
+          </motion.div>
+
+          {/* Content Area - Placeholder */}
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {/* Placeholder Widget 1 - Chat Box */}
+            <div className=" p-0">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-800">Clanker Chat</h3>
+              </div>
+
+              <div className="h-80 overflow-y-auto bg-white p-0 space-y-3">
+                <AnimatePresence>
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-5 rounded-3xl ${message.sender === 'user'
+                          ? 'bg-blue-700 text-white rounded-br-md'
+                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                          }`}
+                      >
+                        <div className="text-sm font-bold">{message.content}</div>
+                        <div className={`text-xs mt-1 opacity-70 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
+                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <input
+                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  onFocus={handleInputFocus}
-                  placeholder="Ask about your finances..."
-                  className="bg-gray-50 border-0 rounded-full pl-6 pr-6 h-14 transition-all duration-200 ease-out focus:ring-2 focus:ring-gray-200 text-gray-900 placeholder:text-gray-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && input.trim()) {
+                      pushUserMessage(input.trim());
+                      setInput('');
+                      // Simulate bot response after a delay
+                      setTimeout(() => {
+                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
+                      }, 1000);
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-gray-950 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <button
+                  onClick={() => {
+                    if (input.trim()) {
+                      pushUserMessage(input.trim());
+                      setInput('');
+                      // Simulate bot response after a delay
+                      setTimeout(() => {
+                        pushOtherMessage('Thanks for your message! I\'m processing your request...');
+                      }, 1000);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-full hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <SendHorizonal />
+                </button>
               </div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={ANIMATION_CONFIG.springSoft}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsListening(!isListening)}
-                  className={`rounded-full h-14 w-14 transition-all duration-200 ease-out ${isListening ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                    }`}
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={ANIMATION_CONFIG.springSoft}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={ANIMATION_CONFIG.springSoft}
-                >
-                  <Button
-                    onClick={handleChatButtonClick}
-                    className="rounded-full h-14 w-14 bg-gray-900 text-white hover:bg-gray-800"
-                    size="icon"
+            </div>
+          </motion.div>
+
+          {/* Permanent Grainy Gradient Ellipse Background 
+          <div
+            className="fixed bottom-0 left-0 right-0 pointer-events-none overflow-hidden h-78 z-0"
+            style={{
+              background: `
+                radial-gradient(
+                  ellipse 140% 100% at 50% 100%,
+                  rgba(99, 102, 241, 0.18) 0%,
+                  rgba(168, 85, 247, 0.15) 20%,
+                  rgba(236, 72, 153, 0.12) 40%,
+                  rgba(168, 85, 247, 0.08) 60%,
+                  transparent 80%
+                )
+              `,
+              filter: "blur(2px)",
+              mixBlendMode: "multiply",
+            }}
+          >
+            {/* Grain texture overlay
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `
+                  radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0),
+                  radial-gradient(circle at 2px 2px, rgba(0,0,0,0.1) 1px, transparent 0)
+                `,
+                backgroundSize: "3px 3px, 5px 5px",
+                backgroundPosition: "0 0, 1px 1px",
+              }}
+            />
+          </div> */}
+
+          {/* Bottom Chat Interface */}
+          <div
+            className={`fixed bottom-0 left-0 right-0 p-4 transition-all duration-300 ease-out z-10 ${showSuggestions ? "bg-transparent" : "bg-transparent"
+              }`}
+          >
+            <div className="max-w-sm mx-auto space-y-3" ref={chatContainerRef}>
+              <AnimatePresence>
+                {showSuggestions && (
+                  <motion.div
+                    className="bg-white/95 backdrop-blur-sm shadow-lg rounded-xl p-4 border-0"
+                    initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                    transition={ANIMATION_CONFIG.spring}
                   >
-                    <MessageCircle className="h-5 w-5" />
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </motion.div>
+                    <motion.h3
+                      className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      SUGGESTED QUESTIONS
+                    </motion.h3>
+                    <motion.div
+                      className="space-y-2"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {[
+                        { icon: Coffee, text: "Show me my coffee spending" },
+                        { icon: BarChart3, text: "Weekly spending breakdown" },
+                        { icon: Home, text: "How's my savings goal?" },
+                        { icon: CreditCard, text: "Recent transactions" },
+                      ].map((suggestion, index) => (
+                        <motion.div key={index} variants={itemVariants}>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-3 h-auto p-3 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-lg border-0 text-xs"
+                            onClick={() =>
+                              handleSuggestionClick(suggestion.text)
+                            }
+                          >
+                            <suggestion.icon className="h-3 w-3 text-gray-500" />
+                            <span className="text-gray-900 text-xs font-medium">
+                              {suggestion.text}
+                            </span>
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.div
+                className="flex gap-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.4,
+                  ...ANIMATION_CONFIG.spring,
+                }}
+              ></motion.div>
+            </div>
           </div>
         </div>
-
-        <div className="h-20"></div>
       </div>
     </div>
-  )
+  );
 }
