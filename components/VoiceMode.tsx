@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useVoice } from "@/contexts/VoiceContext";
 import { VoiceInput } from "./VoiceInput";
-import { VoiceOutput } from "./VoiceOutput";
 import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
 
 const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
@@ -28,18 +27,87 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
 
     const [phase, setPhase] = useState<Phase>("idle");
     const [aiResponse, setAiResponse] = useState("");
-    const outputRef = useRef<HTMLDivElement>(null);
     const cancelledRef = useRef(false);
-    const ttsRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+    // --- Audio unlock (to bypass autoplay restrictions) ---
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const audioUnlockedRef = useRef(false);
+
+    async function unlockAudio() {
+        if (audioUnlockedRef.current) return;
+        try {
+            // Web Audio unlock (silent blip)
+            const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+            if (Ctx) {
+                if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+                await audioCtxRef.current.resume();
+                const osc = audioCtxRef.current.createOscillator();
+                const gain = audioCtxRef.current.createGain();
+                gain.gain.value = 0; // silent
+                osc.connect(gain).connect(audioCtxRef.current.destination);
+                osc.start();
+                osc.stop(audioCtxRef.current.currentTime + 0.03);
+            }
+            audioUnlockedRef.current = true;
+        } catch {
+            // ignore; speechSynthesis may still work
+        }
+    }
+
+    // --- TTS (no UI, fully automatic) ---
+    const speak = async (text: string) => {
+        if (!("speechSynthesis" in window)) {
+            onSpeakEnd();
+            return;
+        }
+
+        await unlockAudio();
+
+        // Wait for voices (Safari/Chrome async quirk)
+        await new Promise<void>((resolve) => {
+            const synth = window.speechSynthesis;
+            const voices = synth.getVoices();
+            if (voices && voices.length) return resolve();
+            const id = setTimeout(resolve, 250);
+            (window as any).speechSynthesis.onvoiceschanged = () => {
+                clearTimeout(id);
+                resolve();
+            };
+        });
+
+        try {
+            window.speechSynthesis.cancel();
+        } catch { }
+
+        const u = new SpeechSynthesisUtterance(text);
+        // Prefer German voice if available; otherwise system default
+        const voices = window.speechSynthesis.getVoices();
+        const deVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("de"));
+        if (deVoice) u.voice = deVoice;
+        u.lang = deVoice?.lang || "de-DE";
+        u.rate = 1;
+        u.pitch = 1;
+
+        u.onend = () => onSpeakEnd();
+        u.onerror = () => onSpeakEnd();
+
+        try {
+            window.speechSynthesis.speak(u);
+        } catch {
+            onSpeakEnd();
+        }
+    };
+
+    // Derived flags
     const isListening = phase === "listening";
     const isSpeaking = phase === "speaking";
     const isProcessing = phase === "thinking";
 
     // Start/stop helpers
-    const startListening = () => {
+    const startListening = async () => {
         if (!isVoiceEnabled || !voiceService) return;
         cancelledRef.current = false;
+        await unlockAudio(); // unlock on entry gesture
         setPhase("listening");
     };
 
@@ -47,7 +115,9 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         cancelledRef.current = true;
         setAiResponse("");
         setPhase("idle");
-        try { window.speechSynthesis?.cancel?.(); } catch { }
+        try {
+            window.speechSynthesis?.cancel?.();
+        } catch { }
     };
 
     // Open/close lifecycle
@@ -57,21 +127,27 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, isVoiceEnabled, voiceService]);
 
-    // Spacebar toggle
+    // Spacebar toggles (and unlock audio on gesture)
     useEffect(() => {
         if (!isActive) return;
-        const onKey = (e: KeyboardEvent) => {
+        const onKey = async (e: KeyboardEvent) => {
             if (e.code === "Space") {
                 e.preventDefault();
+                await unlockAudio();
                 if (phase === "idle") startListening();
                 else stopAll();
+            }
+            if (e.code === "Escape") {
+                e.preventDefault();
+                stopAll();
+                onToggle();
             }
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
     }, [isActive, phase]);
 
-    // Core: user text -> LLM -> speak
+    // User text -> LLM -> auto-speak
     const processUserMessage = async (message: string) => {
         if (!message?.trim()) return;
         setPhase("thinking");
@@ -80,18 +156,18 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
             const aiMessages = [
                 {
                     role: "system" as const,
-                    content: "Du bist ein knapper Voice-Only-Assistent. Antworte in 1–2 kurzen Sätzen, ohne Listen oder Markdown.",
+                    content:
+                        "Du bist ein knapper Voice-Only-Assistent. Antworte in 1–2 kurzen Sätzen, ohne Listen oder Markdown.",
                 },
                 { role: "user" as const, content: message },
             ];
 
             const response: OpenAIToolsResponse = await callOpenAIWithTools(aiMessages);
-
             const text =
                 response?.message?.content?.trim() ||
                 "Entschuldigung, ich habe dazu gerade keine Antwort.";
             setAiResponse(text);
-            setPhase("speaking");
+            setPhase("speaking"); // triggers TTS effect below
         } catch {
             setAiResponse("Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es erneut.");
             setPhase("speaking");
@@ -108,7 +184,15 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         if (isActive) startListening();
     };
 
-    // VoiceOutput completion -> back to listening
+    // After LLM response is ready, AUTO-PLAY (no UI)
+    useEffect(() => {
+        if (isSpeaking && aiResponse) {
+            speak(aiResponse);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSpeaking, aiResponse]);
+
+    // TTS end -> loop back to listening
     const onSpeakEnd = () => {
         if (cancelledRef.current) return;
         setAiResponse("");
@@ -116,50 +200,15 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         else setPhase("idle");
     };
 
-    // Fallback: if VoiceOutput renders an <audio>, hook its 'ended'
-    useEffect(() => {
-        if (!isSpeaking || !outputRef.current) return;
-        const audio = outputRef.current.querySelector("audio");
-        if (!audio) return;
-        const handleEnded = () => onSpeakEnd();
-        audio.addEventListener("ended", handleEnded);
-        return () => audio.removeEventListener("ended", handleEnded);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isSpeaking]);
-
-    // ADD this effect (autoplay on ready)
-    useEffect(() => {
-        if (!isSpeaking || !aiResponse) return;
-
-        // Try to auto-play VoiceOutput's <audio> if it exists
-        const tryPlayAudio = () => {
-            const audio = outputRef.current?.querySelector("audio") as HTMLAudioElement | null;
-            if (!audio) return false;
-            // ensure we start fresh
-            try { audio.currentTime = 0; } catch { }
-            audio.play().catch(() => {/* ignore; fallback below */ });
-            return true;
-        };
-
-        const played = tryPlayAudio();
-
-        // Fallback: Web Speech API (no UI)
-        if (!played && "speechSynthesis" in window) {
-            try { window.speechSynthesis.cancel(); } catch { }
-            const u = new SpeechSynthesisUtterance(aiResponse);
-            ttsRef.current = u;
-            u.onend = () => onSpeakEnd();
-            try { window.speechSynthesis.speak(u); } catch { onSpeakEnd(); }
-        }
-
-        return () => {
-            // cleanup any pending TTS if we unmount or phase changes
-            try { window.speechSynthesis?.cancel?.(); } catch { }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isSpeaking, aiResponse]);
-
-
+    // Orb visuals (simple pulse based on phase)
+    const orbPulse =
+        phase === "listening"
+            ? { scale: [1, 1.06, 1], boxShadow: ["0 0 0px #3b82f6", "0 0 24px #3b82f6", "0 0 0px #3b82f6"] }
+            : phase === "thinking"
+                ? { scale: [1, 1.03, 1], boxShadow: ["0 0 0px #a855f7", "0 0 20px #a855f7", "0 0 0px #a855f7"] }
+                : phase === "speaking"
+                    ? { scale: [1, 1.04, 1], boxShadow: ["0 0 0px #10b981", "0 0 20px #10b981", "0 0 0px #10b981"] }
+                    : { scale: [1], boxShadow: ["0 0 0px rgba(0,0,0,0.1)"] };
 
     return (
         <div>
@@ -183,8 +232,8 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 <h1 className="text-2xl font-extralight text-gray-900 tracking-tight">Voice Mode</h1>
                                 <motion.button
                                     onClick={() => {
-                                        onToggle();
                                         stopAll();
+                                        onToggle();
                                     }}
                                     className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                                     whileHover={{ scale: 1.05 }}
@@ -195,9 +244,19 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                             </motion.div>
 
                             {/* Orb (Spline) */}
-                            <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
+                            <div
+                                onClick={async () => {
+                                    await unlockAudio(); // ensure gesture unlock
+                                    if (phase === "idle") startListening();
+                                    else stopAll();
+                                }}
+                                role="button"
+                                aria-label={phase === "idle" ? "Start voice" : "Stop voice"}
+                            >
+                                <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
+                            </div>
 
-                            {/* Hidden voice components drive the loop */}
+                            {/* Hidden voice input drives the loop */}
                             {isVoiceEnabled && voiceService ? (
                                 <>
                                     {isListening && (
@@ -207,18 +266,6 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                             voiceService={voiceService}
                                             disabled={false}
                                         />
-                                    )}
-
-                                    {isSpeaking && (
-                                        <div ref={outputRef}>
-                                            <VoiceOutput
-                                                text={aiResponse}
-                                                voiceService={voiceService}
-                                                // @ts-ignore optional prop if your component supports it
-                                                onEnd={onSpeakEnd}
-                                                disabled={false}
-                                            />
-                                        </div>
                                     )}
                                 </>
                             ) : (
@@ -235,12 +282,19 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 transition={{ delay: 0.3, duration: ANIMATION_CONFIG.duration.medium }}
                             >
                                 <div className="text-xs text-gray-500 text-center">
-                                    {phase === "idle" && "Idle — tap SPACE"}
+                                    {phase === "idle" && "Idle — tap the orb or press SPACE"}
                                     {phase === "listening" && "Listening... (speak now)"}
                                     {phase === "thinking" && "Thinking..."}
                                     {phase === "speaking" && "Speaking..."}
                                 </div>
                             </motion.div>
+
+                            {/* Invisible animated pulse for the orb */}
+                            <motion.div
+                                className="pointer-events-none fixed inset-0"
+                                animate={orbPulse}
+                                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                            />
                         </div>
                     </div>
                 </motion.div>
