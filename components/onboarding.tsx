@@ -32,30 +32,30 @@ const ANIMATION_CONFIG = {
 
 const steps = [
   {
-    title: "Hi Alex, I'm your\nfinancial guardian",
-    subtitle: "Track effortlessly • Save intelligently • Achieve more",
+    title: "Hallo Alex, ich bin Fin dein\nfinanzieller Begleiter",
+    subtitle: "Einfach verfolgen • Intelligent sparen • Mehr erreichen",
     description: "",
   },
   {
-    title: "Alex, what's your\nmoney situation?",
-    subtitle: "Choose an example that resonates with you",
+    title: "Alex, wie ist deine\nfinanzielle Situation?",
+    subtitle: "Wähle ein Beispiel, das zu dir passt",
     description: "",
   },
   {
-    title: "Alex, let's budget so Japan becomes real.",
-    subtitle: "To reach your goal faster, which sacrifice feels easiest?",
+    title: "Alex, lass uns budgetieren, damit Japan Wirklichkeit wird.",
+    subtitle: "Was fällt dir am leichtesten zu reduzieren, um dein Ziel schneller zu erreichen?",
     description: "",
   },
 ]
 
-const loadingSteps = ["Accessing PostFinance systems", "Reading 90 days of behavior", "Building your financial model"]
+const loadingSteps = ["Zugriff auf PostFinance Systeme", "Lese die letzten 90 Tage", "Erstelle dein Finanzmodell"]
 
 
 
 const budgetOptions = [
-  { id: "starbucks", label: "Give up three Starbucks a week", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
-  { id: "subscriptions", label: "Cancel Netflix, Adobe, and Gym", savings: "CHF 144", icon: Tv, color: "#E50914" },
-  { id: "dinner", label: "Skip one dinner out per weekend", savings: "CHF 130", icon: Utensils, color: "#FF6B35" },
+  { id: "starbucks", label: "Drei Mal pro Woche auf Starbucks verzichten", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
+  { id: "subscriptions", label: "Netflix, Adobe und Fitnessstudio kündigen", savings: "CHF 144", icon: Tv, color: "#E50914" },
+  { id: "dinner", label: "Einmal pro Woche nicht auswärts essen", savings: "CHF 130", icon: Utensils, color: "#FF6B35" },
 ]
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
@@ -320,7 +320,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         >
                           <div className="max-w-[85%] bg-slate-100 rounded-3xl rounded-bl-lg px-5 py-4 shadow-sm">
                             <p className="text-sm text-slate-800 font-medium leading-relaxed">
-                              I have huge student debt, but I want to save for travel
+                              Ich habe hohe Studienkredite, möchte aber trotzdem für Reisen sparen
                             </p>
                           </div>
                         </motion.div>
@@ -333,7 +333,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         >
                           <div className="max-w-[85%] bg-slate-900 rounded-3xl rounded-br-lg px-5 py-4 shadow-lg shadow-slate-900/20">
                             <p className="text-sm text-white font-medium leading-relaxed">
-                              I earn a good salary, but nothing's left at the end of the month
+                              Ich verdiene gut, aber am Ende des Monats bleibt nichts übrig
                             </p>
                           </div>
                         </motion.div>
@@ -346,7 +346,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         >
                           <div className="max-w-[85%] bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl rounded-bl-lg px-5 py-4 shadow-sm border border-slate-200/50">
                             <p className="text-sm text-slate-800 font-medium leading-relaxed">
-                              I'm getting married next year, and my parents can't help
+                              Ich heirate nächstes Jahr und meine Eltern können nicht helfen
                             </p>
                           </div>
                         </motion.div>
@@ -465,7 +465,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.7 }}
                     >
-                      Tap to speak
+Zum Sprechen tippen
                     </motion.p>
                   </motion.div>
                 ) : currentStep === 2 ? (
@@ -561,7 +561,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       transition={{ delay: 1.2 }}
                     >
                       <p className="text-base text-slate-500 font-medium font-sans">
-                        Any one of these gets you to Japan in ~3 months.
+Jede dieser Optionen bringt dich in ~3 Monaten nach Japan.
                       </p>
                     </motion.div>
                   </motion.div>
@@ -631,7 +631,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         : "bg-slate-200 text-slate-400 cursor-not-allowed"
                     }`}
                   >
-                    {isLastStep ? "Start Dashboard" : "Continue"}
+                    {isLastStep ? "Zum Dashboard" : "Weiter"}
                     <motion.div
                       animate={canContinue ? { x: [0, 4, 0] } : {}}
                       transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
@@ -649,7 +649,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={handleSkip}
                     className="w-full text-slate-500 hover:text-slate-700 hover:!bg-slate-100 text-sm rounded-xl h-12 transition-all duration-200"
                   >
-                    Skip for now
+Überspringen
                   </Button>
                 </motion.div>
               )}
