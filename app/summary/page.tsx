@@ -21,6 +21,7 @@ import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceOutput } from "@/components/VoiceOutput";
 import { useVoice } from "@/contexts/VoiceContext";
 import VoiceMode from "@/components/VoiceMode";
+import DetailedView from "@/components/detailed-view";
 
 const ANIMATION_CONFIG = {
   spring: {
@@ -710,9 +711,9 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
       </AnimatePresence>
 
       {/* Voice Mode Overlay */}
-      <VoiceMode 
-        isActive={isVoiceMode} 
-        onToggle={() => setIsVoiceMode(false)} 
+      <VoiceMode
+        isActive={isVoiceMode}
+        onToggle={() => setIsVoiceMode(false)}
       />
     </div>
   );
