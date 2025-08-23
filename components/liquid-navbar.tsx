@@ -45,8 +45,9 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
       setViewportWidth(newWidth)
 
       // Center the navbar based on viewport
-      const centerOffset = (newWidth - 320) / 2 // 320px is approximate navbar width
-      x.set(centerOffset < 24 ? 24 : centerOffset) // Minimum 24px from edge
+      const navbarWidth = 320 // Approximate navbar width
+      const centerOffset = (newWidth - navbarWidth) / 2 // True center position
+      x.set(centerOffset) // This will center it perfectly
     }
 
     updatePosition()
@@ -80,14 +81,14 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
   }
 
   const glassStyle = useMemo(() => ({
-    depth: 30,
-    segments: 140,
-    radius: 25,
+    depth: 0,
+    segments: 150,
+    radius: 50,
     tint: null,
     reflectivity: 0.98,
     thickness: 80,
     dispersion: 2,
-    roughness: 0.05,
+    roughness: 0.1,
   }), []);
 
   return (
@@ -106,9 +107,7 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
         wrapperStyle={{
           position: 'relative',
           borderRadius: '50px',
-          backdropFilter: 'blur(30px)',
           background: 'rgba(255, 255, 255, 0.15)',
-          border: '0.5px solid rgba(255, 255, 255, 0.3)',
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
           width: 'fit-content',
           zIndex: 2147483647,
