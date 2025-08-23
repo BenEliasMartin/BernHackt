@@ -30,6 +30,7 @@ function classNames(...xs: Array<string | false | null | undefined>) {
 export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, className }: LiquidNavbarProps) {
   // roving focus for keyboard nav
   const buttonsRef = React.useRef<Record<string, HTMLButtonElement | null>>({})
+  const navbarRef = React.useRef<HTMLDivElement>(null)
 
   // Smooth tracking of viewport changes
   const [viewportWidth, setViewportWidth] = useState(0)
@@ -45,9 +46,10 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
       setViewportWidth(newWidth)
 
       // Center the navbar based on viewport
-      const navbarWidth = 320 // Approximate navbar width
+      // Use actual measured width if available, otherwise estimate
+      const navbarWidth = navbarRef.current?.offsetWidth || 280 // Estimate for smaller navbar
       const centerOffset = (newWidth - navbarWidth) / 2 // True center position
-      x.set(centerOffset) // This will center it perfectly
+      x.set(centerOffset < 24 ? 24 : centerOffset) // Minimum 24px from edge
     }
 
     updatePosition()
@@ -113,9 +115,9 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
           zIndex: 2147483647,
         }}
       >
-        <div className="px-8 py-4">
+        <div className="px-6 py-3" ref={navbarRef}>
           <nav role="tablist" aria-label="Primary" onKeyDown={onKeyDown}>
-            <div className="relative flex items-center gap-8">
+            <div className="relative flex items-center gap-6">
               {items.map((item) => {
                 const isActive = activeTab === item.id
                 const Icon = item.icon
@@ -131,7 +133,7 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
                     className={classNames(
-                      "relative isolate px-6 py-3 rounded-full outline-none",
+                      "relative isolate px-4 py-2 rounded-full outline-none",
                       "flex flex-col items-center justify-center gap-1",
                       "transition-all duration-300 ease-out",
                       "focus-visible:ring-2 focus-visible:ring-blue-400/50"
@@ -161,7 +163,7 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
                     </AnimatePresence>
 
                     <Icon className={classNames(
-                      "h-6 w-6 transition-all duration-300 ease-out",
+                      "h-5 w-5 transition-all duration-300 ease-out",
                       isActive ? "text-blue-600" : "text-gray-700"
                     )} />
 
