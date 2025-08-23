@@ -86,9 +86,9 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
           }}
         >
 
-          <div className="p-2 rounded-3xl">
+          <div className="p-4 rounded-3xl">
             <nav role="tablist" aria-label="Primary" onKeyDown={onKeyDown}>
-              <div className="relative flex items-center gap-2">
+              <div className="relative flex items-center gap-4">
                 {items.map((item) => {
                   const isActive = activeTab === item.id
                   const Icon = item.icon
@@ -104,8 +104,8 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
                       aria-current={isActive ? "page" : undefined}
                       onClick={() => onTabChange(item.id)}
                       className={classNames(
-                        "relative isolate h-12 min-w-24 px-3 rounded-2xl outline-none",
-                        "flex flex-col items-center justify-center text-xs font-medium",
+                        "relative isolate h-16 w-16 rounded-3xl outline-none",
+                        "flex items-center justify-center",
                         "transition-[transform,opacity] duration-200",
                         "focus-visible:ring-2 focus-visible:ring-white/80",
                         isActive ? "text-white" : "text-gray-600 dark:text-gray-300"
@@ -117,7 +117,7 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
                         {isActive && (
                           <motion.span
                             layoutId="activeTab"
-                            className="absolute inset-0 -z-10 rounded-2xl bg-gray-900/90"
+                            className="absolute inset-0 -z-10 rounded-3xl bg-gray-900/90"
                             initial={{ opacity: 0.0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
@@ -126,8 +126,7 @@ export function LiquidNavbar({ activeTab, onTabChange, items = DEFAULT_ITEMS, cl
                         )}
                       </AnimatePresence>
 
-                      <Icon className={classNames("h-5 w-5 mb-1", isActive ? "text-white" : "text-gray-600 dark:text-gray-300")} />
-                      <span className={classNames(isActive ? "text-white" : "text-gray-600 dark:text-gray-300")}>{item.label}</span>
+                      <Icon className={classNames("h-7 w-7", isActive ? "text-white" : "text-gray-600 dark:text-gray-300")} />
                     </motion.button>
                   )
                 })}
