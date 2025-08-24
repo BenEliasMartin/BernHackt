@@ -221,7 +221,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                     : { scale: [1], boxShadow: ["0 0 0px rgba(0,0,0,0.1)"] };
 
     return (
-        <div>
+        <AnimatePresence>
             {isActive && (
                 <motion.div
                     className="fixed inset-0 z-50 bg-white"
@@ -336,6 +336,6 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                     </div>
                 </motion.div>
             )}
-        </div>
+        </AnimatePresence>
     );
 }

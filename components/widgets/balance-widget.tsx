@@ -176,7 +176,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
           {activeTab === "overview" && (
             <>
               <div className="text-center space-y-4">
-                <div className="text-3xl sm:text-4xl font-semibold text-slate-900">CHF 11,847.50</div>
+                <div className="text-3xl sm:text-4xl font-light text-slate-900">CHF 11,847.50</div>
                 <div className="text-xs text-slate-500 uppercase tracking-wide">Gesamtkontostand</div>
                 <div className="flex items-center justify-center gap-2 text-slate-600">
                   <TrendingUp className="h-4 w-4" />
@@ -232,7 +232,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
 
               <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-200">
                 <div className="text-center space-y-2">
-                  <div className="text-xl sm:text-2xl font-semibold text-slate-900">CHF 7,832</div>
+                  <div className="text-xl sm:text-2xl font-light text-slate-900">CHF 7,832</div>
                   <div className="text-xs text-slate-500">Investitionen</div>
                   <div className="text-xs text-slate-600">+5.2%</div>
                   <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
@@ -243,7 +243,7 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="text-xl sm:text-2xl font-semibold text-slate-900">CHF 4,015</div>
+                  <div className="text-xl sm:text-2xl font-light text-slate-900">CHF 4,015</div>
                   <div className="text-xs text-slate-500">Ersparnisse</div>
                   <div className="text-xs text-slate-600">+8.1%</div>
                   <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">

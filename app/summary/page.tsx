@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import MonthlyBudgetWidget from "./MonthlyBudgetWidget";
 import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
+import Image from "next/image";
+import Fin from "@/public/fin.png";
 
 import {
   Coffee,
@@ -10,6 +12,8 @@ import {
   Home,
   CreditCard,
   SendHorizonal,
+  Mic,
+  Calendar,
 } from "lucide-react";
 import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceOutput } from "@/components/VoiceOutput";
@@ -146,7 +150,7 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
       setMessages([
         {
           id: "1",
-          content: "Hallo! Ich bin dein KI-Finanzassistent. Ich kann dir bei der Budgetverfolgung, Ausgabenanalyse und Finanzplanung helfen. Frag mich nach deinem monatlichen Budget oder wie viel Geld du diesen Monat noch übrig hast!",
+          content: "Hallo! Ich bin Fin, dein Finanzassistent. Ich kann dir bei der Budgetverfolgung, Ausgabenanalyse und Finanzplanung helfen. Frag mich nach deinem monatlichen Budget oder wie viel Geld du diesen Monat noch übrig hast!",
           sender: "other",
           timestamp: new Date(),
         },
@@ -193,23 +197,28 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
     <div className="min-h-screen bg-white">
       <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-4">
         {/* Header */}
-        <div className="pt-8 pb-4">
-          <h1 className="text-2xl font-semibold text-slate-900 mb-4">
-            Deine Finanzübersicht
-          </h1>
-          <div className="flex gap-3">
-            <button
-              className="text-white text-sm font-medium rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 transition-colors"
-              onClick={() => setIsVoiceMode(true)}
-            >
-              Voice Mode
-            </button>
-            <button
-              className="text-white text-sm font-medium rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 transition-colors"
-              onClick={() => setShowWeeklyReview(true)}
-            >
-              Weekly Review
-            </button>
+        <div className="pt-2 pb-6">
+          <div className="flex justify-between items-center mb-4">
+            <Image src={Fin} alt="Fin" className="w-24 h-24 object-cover" />
+            <h1 className="text-xl font-semibold text-slate-900">
+              Fin.
+            </h1>
+            <div className="flex gap-3">
+              <button
+                className="p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-white"
+                onClick={() => setIsVoiceMode(true)}
+                title="Voice Mode"
+              >
+                <Mic className="w-6 h-6" />
+              </button>
+              <button
+                className="p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-white"
+                onClick={() => setShowWeeklyReview(true)}
+                title="Weekly Review"
+              >
+                <Calendar className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 

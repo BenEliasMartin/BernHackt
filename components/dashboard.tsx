@@ -12,9 +12,8 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
-        <div className="pt-8 sm:pt-12 pb-4 sm:pb-6">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">Finanz-Dashboard</h1>
-          <p className="text-slate-600 text-sm">Ihr vollständiger Finanzüberblick</p>
+        <div className="pt-4 sm:pt-12 pb-4 sm:pb-4">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-2">Dashboard</h1>
         </div>
 
         <div className="space-y-8">
