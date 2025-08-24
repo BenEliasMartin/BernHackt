@@ -17,7 +17,7 @@ export function Dashboard() {
           <p className="text-slate-600 text-sm">Ihr vollständiger Finanzüberblick</p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           <BalanceWidget />
           <ChallengeWidget />
           <BudgetWidget />

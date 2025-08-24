@@ -1,6 +1,5 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, LucidePieChart, Flame, CreditCard } from "lucide-react"
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
@@ -130,44 +129,44 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
   }
 
   return (
-    <Card className="p-6 bg-white border border-gray-100 shadow-sm">
-      <div className="space-y-6">
-        <div className="flex items-center justify-center gap-0 border-b border-gray-200">
+    <div className="bg-white border border-slate-200 rounded-lg p-4 sm:p-6">
+      <div className="space-y-8">
+        <div className="flex items-center justify-between border-b border-slate-200">
           <button
             onClick={() => handleTabChange("overview")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "overview"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+            className={`px-3 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "overview"
+              ? "border-slate-800 text-slate-800"
+              : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
           >
-Übersicht
+            Übersicht
           </button>
           <button
             onClick={() => handleTabChange("portfolio")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "portfolio"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+            className={`px-3 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "portfolio"
+              ? "border-slate-800 text-slate-800"
+              : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
           >
-Portfolio
+            Portfolio
           </button>
           <button
             onClick={() => handleTabChange("budget")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "budget"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+            className={`px-3 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "budget"
+              ? "border-slate-800 text-slate-800"
+              : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
           >
-Budget
+            Budget
           </button>
           <button
             onClick={() => handleTabChange("debt")}
-            className={`px-6 py-3 text-sm font-light transition-all duration-300 border-b-2 ${activeTab === "debt"
+            className={`px-3 sm:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "debt"
               ? "border-red-500 text-red-600"
-              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+              : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
           >
-Schulden
+            Schulden
           </button>
         </div>
 
@@ -176,21 +175,21 @@ Schulden
         >
           {activeTab === "overview" && (
             <>
-              <div className="text-center space-y-2">
-                <div className="text-5xl font-extralight text-gray-900 tracking-tight">CHF 11,847.50</div>
-                <div className="text-xs text-gray-400 uppercase tracking-widest font-light">GESAMTKONTOSTAND</div>
-                <div className="flex items-center justify-center gap-2 text-gray-600">
+              <div className="text-center space-y-4">
+                <div className="text-3xl sm:text-4xl font-semibold text-slate-900">CHF 11,847.50</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wide">Gesamtkontostand</div>
+                <div className="flex items-center justify-center gap-2 text-slate-600">
                   <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm font-light">+2,3% in diesem Monat</span>
+                  <span className="text-sm">+2,3% in diesem Monat</span>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="h-20 w-full flex justify-center">
+              <div className="space-y-4">
+                <div className="h-16 sm:h-20 w-full flex justify-center">
                   {mounted ? (
                     <BarChart
-                      width={350}
-                      height={80}
+                      width={300}
+                      height={64}
                       data={dailySpendingData}
                       margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
                     >
@@ -221,49 +220,49 @@ Schulden
                       />
                     </BarChart>
                   ) : (
-                    <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">Diagramm wird geladen...</span>
+                    <div className="w-full h-full bg-slate-100 rounded-lg flex items-center justify-center">
+                      <span className="text-slate-400 text-sm">Diagramm wird geladen...</span>
                     </div>
                   )}
                 </div>
-                <div className="text-center text-xs text-gray-400 uppercase tracking-wide font-light">
-Tägliche Ausgaben diese Woche
+                <div className="text-center text-xs text-slate-500">
+                  Tägliche Ausgaben diese Woche
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-200">
                 <div className="text-center space-y-2">
-                  <div className="text-2xl font-extralight text-gray-900">CHF 7,832</div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Investitionen</div>
-                  <div className="text-xs text-gray-600">+5.2%</div>
-                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="text-xl sm:text-2xl font-semibold text-slate-900">CHF 7,832</div>
+                  <div className="text-xs text-slate-500">Investitionen</div>
+                  <div className="text-xs text-slate-600">+5.2%</div>
+                  <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gray-300 rounded-full transition-all duration-1000"
+                      className="h-full bg-slate-400 rounded-full"
                       style={{ width: "65%" }}
                     ></div>
                   </div>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="text-2xl font-extralight text-gray-900">CHF 4,015</div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-light">Ersparnisse</div>
-                  <div className="text-xs text-gray-600">+8.1%</div>
-                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="text-xl sm:text-2xl font-semibold text-slate-900">CHF 4,015</div>
+                  <div className="text-xs text-slate-500">Ersparnisse</div>
+                  <div className="text-xs text-slate-600">+8.1%</div>
+                  <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gray-300 rounded-full transition-all duration-1000"
+                      className="h-full bg-slate-400 rounded-full"
                       style={{ width: "45%" }}
                     ></div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-gray-100">
+              <div className="space-y-4 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-light text-gray-900">Letzte Transaktionen</h3>
-                  <TrendingUp className="h-4 w-4 text-gray-400" />
+                  <h3 className="text-sm font-medium text-slate-900">Letzte Transaktionen</h3>
+                  <TrendingUp className="h-4 w-4 text-slate-400" />
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
                         <img
@@ -273,14 +272,14 @@ Tägliche Ausgaben diese Woche
                         />
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Starbucks Zürich HB</div>
-                        <div className="text-xs text-gray-400">Heute, 09:15 • Essen & Trinken</div>
+                        <div className="text-sm font-medium text-slate-900">Starbucks Zürich HB</div>
+                        <div className="text-xs text-slate-500">Heute, 09:15 • Essen & Trinken</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-900">-CHF 6.40</div>
+                    <div className="text-sm font-medium text-slate-900">-CHF 6.40</div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
                         <img
@@ -290,63 +289,63 @@ Tägliche Ausgaben diese Woche
                         />
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Migros Supermarkt</div>
-                        <div className="text-xs text-gray-400">Gestern, 18:30 • Lebensmittel</div>
+                        <div className="text-sm font-medium text-slate-900">Migros Supermarkt</div>
+                        <div className="text-xs text-slate-500">Gestern, 18:30 • Lebensmittel</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-900">-CHF 87.23</div>
+                    <div className="text-sm font-medium text-slate-900">-CHF 87.23</div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                        <span className="text-white font-light text-xs">SBB</span>
+                        <span className="text-white font-medium text-xs">SBB</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">SBB Zugticket</div>
-                        <div className="text-xs text-gray-400">Gestern, 14:45 • Transport</div>
+                        <div className="text-sm font-medium text-slate-900">SBB Zugticket</div>
+                        <div className="text-xs text-slate-500">Gestern, 14:45 • Transport</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-900">-CHF 24.60</div>
+                    <div className="text-sm font-medium text-slate-900">-CHF 24.60</div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
-                        <span className="text-white font-light text-xs">N26</span>
+                        <span className="text-white font-medium text-xs">N26</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Investitionseinzahlung</div>
-                        <div className="text-xs text-gray-400">Vor 2 Tagen • Investition</div>
+                        <div className="text-sm font-medium text-slate-900">Investitionseinzahlung</div>
+                        <div className="text-xs text-slate-500">Vor 2 Tagen • Investition</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-600">+CHF 500.00</div>
+                    <div className="text-sm font-medium text-slate-600">+CHF 500.00</div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-gray-600" />
+                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-slate-600" />
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Gehaltseingang</div>
-                        <div className="text-xs text-gray-400">Vor 3 Tagen • Einkommen</div>
+                        <div className="text-sm font-medium text-slate-900">Gehaltseingang</div>
+                        <div className="text-xs text-slate-500">Vor 3 Tagen • Einkommen</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-600">+CHF 4,200.00</div>
+                    <div className="text-sm font-medium text-slate-600">+CHF 4,200.00</div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center">
-                        <span className="text-white font-light text-xs">UPC</span>
+                        <span className="text-white font-medium text-xs">UPC</span>
                       </div>
                       <div>
-                        <div className="text-sm font-light text-gray-900">Internet & TV Rechnung</div>
-                        <div className="text-xs text-gray-400">Vor 4 Tagen • Rechnungen</div>
+                        <div className="text-sm font-medium text-slate-900">Internet & TV Rechnung</div>
+                        <div className="text-xs text-slate-500">Vor 4 Tagen • Rechnungen</div>
                       </div>
                     </div>
-                    <div className="text-sm font-light text-gray-900">-CHF 89.90</div>
+                    <div className="text-sm font-medium text-slate-900">-CHF 89.90</div>
                   </div>
                 </div>
               </div>
@@ -354,8 +353,8 @@ Tägliche Ausgaben diese Woche
           )}
 
           {activeTab === "portfolio" && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
+            <div className="space-y-8">
+              <div className="text-center space-y-3">
                 <div className="text-3xl font-extralight text-gray-900">CHF 7,832</div>
                 <div className="text-xs text-gray-400 uppercase tracking-widest font-light">PORTFOLIOWERT</div>
                 <div className="flex items-center justify-center gap-2 text-gray-600">
@@ -509,8 +508,8 @@ Tägliche Ausgaben diese Woche
           )}
 
           {activeTab === "budget" && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
+            <div className="space-y-8">
+              <div className="text-center space-y-3">
                 <div className="text-3xl font-extralight text-gray-900">CHF 4,480</div>
                 <div className="text-xs text-gray-400 uppercase tracking-widest font-light">MONATLICHE AUSGABEN</div>
                 <div className="flex items-center justify-center gap-2 text-gray-600">
@@ -565,8 +564,8 @@ Tägliche Ausgaben diese Woche
           )}
 
           {activeTab === "debt" && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
+            <div className="space-y-8">
+              <div className="text-center space-y-3">
                 <div className="text-3xl font-extralight text-gray-900">Tilgungsplan</div>
                 <div className="text-sm text-gray-500 font-light">Ihr Aktionsplan zur Schuldenfreiheit</div>
               </div>
@@ -609,7 +608,7 @@ Tägliche Ausgaben diese Woche
                   <CreditCard className="h-4 w-4 text-gray-400" />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {debtData.map((debt, index) => (
                     <div
                       key={index}
@@ -633,6 +632,6 @@ Tägliche Ausgaben diese Woche
           )}
         </div>
       </div>
-    </Card>
+    </div>
   )
 }
