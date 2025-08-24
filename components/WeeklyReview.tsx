@@ -14,9 +14,35 @@ import {
     Zap,
     Coffee,
     Home,
-    Car
+    Car,
+    ShoppingCart
 } from "lucide-react";
 // Removed Spline import - using iframe instead
+
+// Purchase prediction interfaces
+interface PurchasePrediction {
+  mostLikelyPurchase: {
+    merchant: string
+    category: string
+    amount: number
+    confidence: number
+    probability: number
+  }
+  topPredictions: Array<{
+    merchant: string
+    category: string
+    amount: number
+    confidence: number
+    frequency: number
+  }>
+  insights: {
+    totalPredictedSpending: number
+    averageTransactionAmount: number
+    mostFrequentCategory: string
+    mostFrequentMerchant: string
+    spendingPattern: string
+  }
+}
 
 interface WeeklyReviewProps {
     isVisible: boolean;
@@ -105,6 +131,61 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    // Purchase prediction state
+    const [prediction, setPrediction] = useState<PurchasePrediction | null>(null)
+    const [predictionLoading, setPredictionLoading] = useState(false)
+
+    // Fetch purchase prediction
+    const fetchPurchasePrediction = async () => {
+        setPredictionLoading(true)
+        try {
+            console.log('🔮 Fetching purchase prediction for weekly review...')
+            const response = await fetch('/api/predict-purchase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    modelType: 'small',
+                    useMockModel: true,
+                    userId: 'test-user-123'
+                })
+            })
+
+            const result = await response.json()
+            if (result.success && result.data) {
+                setPrediction(result.data)
+                console.log('✅ Purchase prediction loaded:', result.data.mostLikelyPurchase)
+            } else {
+                console.warn('⚠️ Failed to load prediction, using fallback')
+                setPrediction(result.fallbackPrediction || null)
+            }
+        } catch (error) {
+            console.error('❌ Error fetching purchase prediction:', error)
+        } finally {
+            setPredictionLoading(false)
+        }
+    }
+
+    // Generate randomized prediction sentence
+    const generatePredictionSentence = (pred: PurchasePrediction): string => {
+        const { merchant, category, amount, confidence } = pred.mostLikelyPurchase
+        const formattedAmount = `${amount.toFixed(2)} Franken`
+        const confidencePercent = Math.round(confidence * 100)
+        
+        const templates = [
+            `Übrigens, meine Kristallkugel sagt mir, dass du wahrscheinlich bald bei ${merchant} etwa ${formattedAmount} ausgeben wirst. Bin mir zu ${confidencePercent}% sicher!`,
+            `Ach, bevor ich es vergesse: Ich wette, dein nächster Einkauf wird bei ${merchant} sein - so um die ${formattedAmount}. Meine Vorhersage-Genauigkeit liegt bei ${confidencePercent}%!`,
+            `Kleine Vorhersage gefällig? Du wirst höchstwahrscheinlich bald ${formattedAmount} bei ${merchant} lassen. Vertraue mir, ich liege zu ${confidencePercent}% richtig!`,
+            `Mein Algorithmus flüstert mir zu, dass ${merchant} demnächst ${formattedAmount} von dir sehen wird. Konfidenz-Level: ${confidencePercent}%!`,
+            `Psst, ich verrate dir ein Geheimnis: Dein Portemonnaie wird bald um ${formattedAmount} leichter - und zwar bei ${merchant}. Bin mir zu ${confidencePercent}% sicher!`,
+            `Moment mal, da ist noch was! Meine KI-Sensoren zeigen: ${merchant} wartet auf dich mit einer Rechnung von etwa ${formattedAmount}. Trefferquote: ${confidencePercent}%!`,
+            `Ach ja, fast vergessen: Du wirst vermutlich bald ${formattedAmount} bei ${merchant} ausgeben. Das sagt zumindest meine ${confidencePercent}%-ige Vorhersage!`
+        ]
+        
+        return templates[Math.floor(Math.random() * templates.length)]
+    }
+
     const sections = [
         "intro",
         "spending",
@@ -114,22 +195,31 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
         "nextWeek"
     ];
 
-    // Narration texts for each section - Much more engaging and story-like with spoken numbers
-    const narrationTexts = [
-        "Na, da bist du ja wieder! Zeit für deine wöchentliche Finanz-Folter... äh, ich meine Expedition! Lass uns mal schauen, was du diese Woche wieder angestellt hast.",
-        `Oh Mann, oh Mann! Du hast diese Woche wieder ordentlich auf den Putz gehauen mit sage und schreibe vierhundertsechsundachtzig Franken und fünfzig Rappen! Aber hey, immerhin bist du nur bei siebenundsechzig Prozent deines Budgets - das ist ja fast schon sparsam für dich!`,
-        "Jetzt wird es interessant! Dein Japan-Fund wächst tatsächlich. Wer hätte das gedacht? Du fügst jede Woche ein paar Franken hinzu, und langsam aber sicher kommst du deinem Traumziel näher. Nicht schlecht, nicht schlecht!",
-        "Zeit für eine kleine Siegesfeier! Diese Woche warst du tatsächlich ein Finanz-Champion. Du hast nicht nur gespart, sondern auch bewiesen, dass du deine Ziele im Griff hast. Das ist ja mal eine Überraschung!",
-        "Und hier kommt der Höhepunkt! Deine Challenges laufen überraschenderweise wie ein gut geölter Motor. Du bleibst motiviert und sparst dabei auch noch echtes Geld. Wer hätte das von dir erwartet?",
-        "Das war ja mal eine Reise voller Überraschungen! Du bist bereit für die nächste Woche, und weißt was? Jeder Fortschritt bringt dich Japan ein Stück näher. Du baust dir deine Zukunft, eine Woche nach der anderen - auch wenn es manchmal langsam vorangeht!"
-    ];
+    // Generate narration texts dynamically with purchase prediction
+    const getNarrationTexts = () => {
+        const baseIntro = "Na, da bist du ja wieder! Zeit für deine wöchentliche Finanz-Folter... äh, ich meine Expedition! Lass uns mal schauen, was du diese Woche wieder angestellt hast."
+        const predictionText = prediction ? ` ${generatePredictionSentence(prediction)}` : ""
+        
+        return [
+            baseIntro + predictionText,
+            `Oh Mann, oh Mann! Du hast diese Woche wieder ordentlich auf den Putz gehauen mit sage und schreibe vierhundertsechsundachtzig Franken und fünfzig Rappen! Aber hey, immerhin bist du nur bei siebenundsechzig Prozent deines Budgets - das ist ja fast schon sparsam für dich!`,
+            "Jetzt wird es interessant! Dein Japan-Fund wächst tatsächlich. Wer hätte das gedacht? Du fügst jede Woche ein paar Franken hinzu, und langsam aber sicher kommst du deinem Traumziel näher. Nicht schlecht, nicht schlecht!",
+            "Zeit für eine kleine Siegesfeier! Diese Woche warst du tatsächlich ein Finanz-Champion. Du hast nicht nur gespart, sondern auch bewiesen, dass du deine Ziele im Griff hast. Das ist ja mal eine Überraschung!",
+            "Und hier kommt der Höhepunkt! Deine Challenges laufen überraschenderweise wie ein gut geölter Motor. Du bleibst motiviert und sparst dabei auch noch echtes Geld. Wer hätte das von dir erwartet?",
+            "Das war ja mal eine Reise voller Überraschungen! Du bist bereit für die nächste Woche, und weißt was? Jeder Fortschritt bringt dich Japan ein Stück näher. Du baust dir deine Zukunft, eine Woche nach der anderen - auch wenn es manchmal langsam vorangeht!"
+        ]
+    }
 
     useEffect(() => {
         if (!isVisible) {
             setIsIframeLoaded(false);
             setCurrentSection(0);
             setShowContent(false);
+            setPrediction(null);
         } else {
+            // Fetch purchase prediction first
+            fetchPurchasePrediction();
+            
             // Start the review sequence
             const timer = setTimeout(() => setShowContent(true), 1000);
             return () => clearTimeout(timer);
@@ -143,12 +233,13 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
         // Start narration for current section only once
         const narrationTimer = setTimeout(() => {
             if (!isPlaying) { // Only start if not already playing
-                speakWithElevenLabs(narrationTexts[currentSection]);
+                const texts = getNarrationTexts();
+                speakWithElevenLabs(texts[currentSection]);
             }
         }, 500);
 
         return () => clearTimeout(narrationTimer);
-    }, [currentSection, showContent, isVisible]); // Removed narrationTexts dependency
+    }, [currentSection, showContent, isVisible, prediction]); // Added prediction dependency
 
     // ElevenLabs TTS function
     const speakWithElevenLabs = async (text: string) => {
@@ -364,6 +455,44 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                                                 className="text-lg text-white/80 font-satoshi"
                                                 delay={0.8}
                                             />
+                                            
+                                            {/* Purchase Prediction Visual */}
+                                            {prediction && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 1.2, duration: 0.6 }}
+                                                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mx-4 border border-white/20"
+                                                >
+                                                    <div className="flex items-center justify-center gap-2 mb-2">
+                                                        <ShoppingCart className="h-4 w-4 text-purple-300" />
+                                                        <span className="text-sm text-white/80 font-medium">KI-Vorhersage</span>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-white font-semibold">
+                                                            {prediction.mostLikelyPurchase.merchant}
+                                                        </div>
+                                                        <div className="text-purple-200 text-sm">
+                                                            ~CHF {prediction.mostLikelyPurchase.amount.toFixed(2)}
+                                                        </div>
+                                                        <div className="text-xs text-white/60 mt-1">
+                                                            {Math.round(prediction.mostLikelyPurchase.confidence * 100)}% Konfidenz
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                            
+                                            {predictionLoading && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="text-white/60 text-sm flex items-center justify-center gap-2"
+                                                >
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white/60" />
+                                                    Vorhersage wird geladen...
+                                                </motion.div>
+                                            )}
+                                            
                                             <motion.div
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}

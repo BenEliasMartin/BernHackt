@@ -3,6 +3,7 @@
 import { TrendingUp, TrendingDown, LucidePieChart, Flame, CreditCard } from "lucide-react"
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
+import { firebaseDataService, type DashboardData } from "@/lib/firebase-data-service"
 
 // Dynamic import with no SSR
 const ResponsiveContainer = dynamic(
@@ -111,6 +112,9 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "portfolio" | "budget" | "debt">(initialTab || "overview")
   const [isAnimating, setIsAnimating] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -118,6 +122,43 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
       setActiveTab(initialTab)
     }
   }, [initialTab])
+
+  // Load Firebase data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        console.log('🔄 Loading dashboard data from Firebase...')
+        
+        const data = await firebaseDataService.getDashboardData()
+        setDashboardData(data)
+        console.log('✅ Dashboard data loaded:', data)
+      } catch (err) {
+        console.error('❌ Error loading dashboard data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load data')
+        // Set fallback data on error
+        setDashboardData({
+          totalBalance: 11847.50,
+          totalIncome: 5200,
+          totalSpent: 2800,
+          netAmount: 2400,
+          currency: 'CHF',
+          monthlyTrend: [],
+          categorySpending: [],
+          recentTransactions: [],
+          savingsGoals: [],
+          budgets: []
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (mounted) {
+      loadDashboardData()
+    }
+  }, [mounted])
 
   const handleTabChange = (tab: "overview" | "portfolio" | "budget" | "debt") => {
     if (tab === activeTab) return
@@ -176,21 +217,35 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
           {activeTab === "overview" && (
             <>
               <div className="text-center space-y-4">
-                <div className="text-3xl sm:text-4xl font-light text-slate-900">CHF 11,847.50</div>
+                {isLoading ? (
+                  <div className="text-3xl sm:text-4xl font-light text-slate-400">Laden...</div>
+                ) : (
+                  <div className="text-3xl sm:text-4xl font-light text-slate-900">
+                    {dashboardData?.currency || 'CHF'} {dashboardData?.totalBalance?.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                  </div>
+                )}
                 <div className="text-xs text-slate-500 uppercase tracking-wide">Gesamtkontostand</div>
-                <div className="flex items-center justify-center gap-2 text-slate-600">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm">+2,3% in diesem Monat</span>
-                </div>
+                {!isLoading && dashboardData && (
+                  <div className="flex items-center justify-center gap-2 text-slate-600">
+                    {dashboardData.netAmount >= 0 ? (
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-600" />
+                    )}
+                    <span className="text-sm">
+                      {dashboardData.netAmount >= 0 ? '+' : ''}{dashboardData.netAmount?.toLocaleString('de-CH')} {dashboardData.currency} in diesem Monat
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
                 <div className="h-16 sm:h-20 w-full flex justify-center">
-                  {mounted ? (
+                  {mounted && dashboardData?.monthlyTrend ? (
                     <BarChart
                       width={300}
                       height={64}
-                      data={dailySpendingData}
+                      data={dashboardData.monthlyTrend.map(item => ({ day: item.name, amount: item.value / 10, dayFull: item.name }))}
                       margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
                     >
                       <XAxis
@@ -262,39 +317,41 @@ export function BalanceWidget({ initialTab }: BalanceWidgetProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
-                        <img
-                          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-p3nM3kWXqXi4BuC33Lxn4SbSz86U6N.png"
-                          alt="Starbucks"
-                          className="w-6 h-6"
-                        />
+                  {isLoading ? (
+                    <div className="text-center text-slate-400 py-4">Transaktionen laden...</div>
+                  ) : dashboardData?.recentTransactions && dashboardData.recentTransactions.length > 0 ? (
+                    dashboardData.recentTransactions.slice(0, 5).map((transaction, index) => (
+                      <div key={transaction.id || index} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.type === 'income' ? 'bg-green-600' : 'bg-slate-600'
+                          }`}>
+                            <span className="text-white font-medium text-xs">
+                              {transaction.description.substring(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-slate-900">{transaction.description}</div>
+                            <div className="text-xs text-slate-500">
+                              {transaction.date.toLocaleDateString('de-DE', { 
+                                day: 'numeric', 
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })} • {transaction.category}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={`text-sm font-medium ${
+                          transaction.type === 'income' ? 'text-green-600' : 'text-slate-900'
+                        }`}>
+                          {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toLocaleString('de-CH')} {dashboardData.currency}
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-slate-900">Starbucks Zürich HB</div>
-                        <div className="text-xs text-slate-500">Heute, 09:15 • Essen & Trinken</div>
-                      </div>
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">-CHF 6.40</div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-                        <img
-                          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-DJSf6UA3k3Im4hmyNFnIYb1MqHJXNb.png"
-                          alt="Migros"
-                          className="w-6 h-6"
-                        />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-slate-900">Migros Supermarkt</div>
-                        <div className="text-xs text-slate-500">Gestern, 18:30 • Lebensmittel</div>
-                      </div>
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">-CHF 87.23</div>
-                  </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-slate-400 py-4">Keine Transaktionen verfügbar</div>
+                  )}
 
                   <div className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
