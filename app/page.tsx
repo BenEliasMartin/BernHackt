@@ -1,3 +1,6 @@
+
+
+/*
 'use client';
 
 import React from 'react';
@@ -21,11 +24,20 @@ export default function Home() {
           </p>
         </div>
 
-        <ModelInference 
+        {/*<ModelInference
           useMockMode={false}
           onPredictionComplete={handlePredictionComplete}
         />
-      </div>
-    </main>
+      </div >
+    </main >
+}; 
   );
+}
+  */
+
+"use client"
+import { AppLayout } from "@/components/app-layout"
+
+export default function HomePage() {
+  return <AppLayout />
 }
