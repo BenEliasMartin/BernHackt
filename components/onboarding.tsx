@@ -6,17 +6,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ChevronRight,
   Mic,
-  BarChart3,
-  Bell,
-  Volume2,
-  Headphones,
-  Video,
-  Sparkles,
-  FileText,
   Coffee,
   Tv,
   Utensils,
-  ChevronLeft,
 } from "lucide-react"
 import Spline from "@splinetool/react-spline"
 import { useVoice } from "@/contexts/VoiceContext"
@@ -52,11 +44,6 @@ const steps = [
     description: "",
   },
   {
-    title: "Wie möchtest du deine Finanzupdates erhalten?",
-    subtitle: "",
-    description: "",
-  },
-  {
     title: "Alex, lass uns budgetieren, damit Japan Wirklichkeit wird.",
     subtitle: "Was fällt dir am leichtesten, um dein Ziel schneller zu erreichen?",
     description: "",
@@ -65,18 +52,7 @@ const steps = [
 
 const loadingSteps = ["Zugriff auf PostFinance-Systeme", "Lese die letzten 90 Tage Verhalten", "Erstelle dein Finanzmodell"]
 
-const dailyOptions = [
-  { id: "morning-podcast", label: "Morgendlicher Podcast", duration: "2 Min", icon: Headphones },
-  { id: "visual-dashboard", label: "Visuelles Dashboard", duration: null, icon: BarChart3 },
-  { id: "quick-notification", label: "Schnelle Benachrichtigung", duration: null, icon: Bell },
-  { id: "voice-summary", label: "Sprachzusammenfassung", duration: null, icon: Volume2 },
-]
 
-const weeklyOptions = [
-  { id: "spotify-video", label: "Spotify-ähnliches Video", duration: null, icon: Video },
-  { id: "animated-insights", label: "Animierte Einblicke", duration: null, icon: Sparkles },
-  { id: "detailed-report", label: "Detaillierter Bericht", duration: null, icon: FileText },
-]
 
 const budgetOptions = [
   { id: "starbucks", label: "Verzichte dreimal pro Woche auf Starbucks", savings: "CHF 127", icon: Coffee, color: "#8B4513" },
@@ -86,11 +62,9 @@ const budgetOptions = [
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedDaily, setSelectedDaily] = useState<string>("")
-  const [selectedWeekly, setSelectedWeekly] = useState<string>("")
-  const [selectedBudget, setSelectedBudget] = useState<string>("")
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [selectedBudgetOption, setSelectedBudgetOption] = useState<string | null>(null)
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0)
-  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0)
 
   const [isSplineLoaded, setIsSplineLoaded] = useState(false)
   const [activeLoadingStep, setActiveLoadingStep] = useState(-1)
@@ -147,15 +121,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }, [currentStep])
 
-  useEffect(() => {
-    if (currentStep === 2) {
-      const interval = setInterval(() => {
-        setCurrentCarouselIndex((prev) => (prev + 1) % dailyOptions.length)
-      }, 3000)
 
-      return () => clearInterval(interval)
-    }
-  }, [currentStep])
 
   // Clear transcribed text when moving to next question
   useEffect(() => {
@@ -184,30 +150,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     setSelectedScenario(scenarioId)
   }
 
-  const handleDailySelect = (optionId: string) => {
-    setSelectedDaily(optionId)
-    const index = dailyOptions.findIndex((option) => option.id === optionId)
-    setCurrentCarouselIndex(index)
-  }
-
-  const goToPrevious = () => {
-    const newIndex = currentCarouselIndex === 0 ? dailyOptions.length - 1 : currentCarouselIndex - 1
-    setCurrentCarouselIndex(newIndex)
-    setSelectedDaily(dailyOptions[newIndex].id)
-  }
-
-  const goToNext = () => {
-    const newIndex = (currentCarouselIndex + 1) % dailyOptions.length
-    setCurrentCarouselIndex(newIndex)
-    setSelectedDaily(dailyOptions[newIndex].id)
-  }
-
-  const handleWeeklySelect = (optionId: string) => {
-    setSelectedWeekly(optionId)
-  }
-
   const handleBudgetSelect = (optionId: string) => {
-    setSelectedBudget(optionId)
+    setSelectedBudgetOption(optionId)
     setTimeout(() => {
       onComplete()
     }, 1000) // 1 second delay to show selection animation
@@ -227,12 +171,90 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       const nextQuestionIndex = prev.currentQuestionIndex + 1
       const isComplete = nextQuestionIndex >= financialQuestions.length
 
-      return {
+      console.log('Financial Interview Progress:')
+      console.log('- Current question index:', prev.currentQuestionIndex)
+      console.log('- Next question index:', nextQuestionIndex)
+      console.log('- Total questions:', financialQuestions.length)
+      console.log('- Is complete:', isComplete)
+      console.log('- All responses so far:', newResponses)
+
+      const updatedData = {
         responses: newResponses,
         currentQuestionIndex: nextQuestionIndex,
         isInterviewComplete: isComplete
       }
+
+      // If interview is complete, send data to ChatGPT
+      if (isComplete) {
+        console.log('🎉 Interview complete! Sending data to ChatGPT API...')
+        sendFinancialDataToAPI(newResponses)
+      }
+
+      return updatedData
     })
+  }
+
+  // Function to send financial data to ChatGPT API
+  const sendFinancialDataToAPI = async (responses: string[]) => {
+    try {
+      console.log('🚀 Starting API call to analyze financial data')
+      console.log('📊 Sending financial data to API:', responses)
+      console.log('❓ Questions being sent:', financialQuestions)
+      
+      const requestBody = {
+        responses,
+        questions: financialQuestions,
+        timestamp: new Date().toISOString()
+      }
+      
+      console.log('📦 Request body:', requestBody)
+      
+      const response = await fetch('/api/analyze-financial-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      console.log('📡 API Response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ API Error Response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+      }
+
+      const data = await response.json()
+      console.log('✅ Financial analysis received:', data)
+      
+      // Log Firebase creation results
+      if (data.createdItems) {
+        console.log('🔥 Created Firebase items:', data.createdItems)
+        if (data.createdItems.savingGoals.length > 0) {
+          console.log(`💰 Created ${data.createdItems.savingGoals.length} saving goal(s):`, data.createdItems.savingGoals)
+        }
+        if (data.createdItems.budgets.length > 0) {
+          console.log(`💳 Created ${data.createdItems.budgets.length} budget(s):`, data.createdItems.budgets)
+        }
+      }
+      
+      // Log ChatGPT recommendations
+      if (data.recommendations) {
+        console.log('🤖 ChatGPT recommendations:', data.recommendations)
+      }
+      
+      // Log the analysis text
+      if (data.analysis) {
+        console.log('📝 Financial Analysis:', data.analysis)
+      }
+      
+      return data
+      
+    } catch (error) {
+      console.error('💥 Error sending financial data to API:', error)
+      throw error
+    }
   }
 
   const handleVoiceError = (error: string) => {
@@ -259,7 +281,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const currentStepData = steps[currentStep]
   const isLastStep = currentStep === steps.length - 1
-  const canContinue = currentStep !== 2 || (selectedDaily && selectedWeekly) || (currentStep == 2 && selectedBudget)
+  const canContinue = currentStep !== 2 || selectedBudgetOption
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6 overflow-hidden">
@@ -662,279 +684,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </motion.div>
                 ) : currentStep === 2 ? (
                   <motion.div
-                    className="space-y-12 mt-8 max-w-md mx-auto"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.div
-                      className="space-y-6"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
-                    >
-                      <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Tägliche Updates
-                        </h3>
-
-                        <motion.div
-                          className="relative h-80 mb-8"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.8 }}
-                        >
-                          <motion.button
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                            onClick={goToPrevious}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <ChevronLeft className="w-6 h-6 text-slate-700" />
-                          </motion.button>
-
-                          <motion.button
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-                            onClick={goToNext}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <ChevronRight className="w-6 h-6 text-slate-700" />
-                          </motion.button>
-
-                          <AnimatePresence mode="wait">
-                            {dailyOptions.map((option, index) => {
-                              const IconComponent = option.icon
-                              const isActive = index === currentCarouselIndex
-
-                              if (!isActive) return null
-
-                              return (
-                                <motion.div
-                                  key={option.id}
-                                  className="absolute inset-0 bg-white rounded-3xl border-2 border-slate-200 shadow-xl overflow-hidden cursor-pointer mx-16"
-                                  initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
-                                  animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                                  exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
-                                  transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-                                  whileHover={{ scale: 1.02, y: -4 }}
-                                  onClick={() => handleDailySelect(option.id)}
-                                >
-                                  {/* Visual Preview Based on Option Type */}
-                                  <div className="h-full flex flex-col">
-                                    {/* Header */}
-                                    <div className="p-6 border-b border-slate-100">
-                                      <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-slate-100 rounded-2xl">
-                                          <IconComponent className="w-6 h-6 text-slate-700" />
-                                        </div>
-                                        <div className="text-left">
-                                          <h4 className="text-lg font-semibold text-slate-900 font-satoshi">{option.label}</h4>
-                                          {option.duration && (
-                                            <p className="text-sm text-slate-500">{option.duration}</p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Visual Preview */}
-                                    <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 to-white">
-                                      {option.id === "morning-podcast" && (
-                                        <div className="space-y-4">
-                                          <div className="bg-slate-900 rounded-2xl p-4 text-white">
-                                            <div className="flex items-center gap-3 mb-3">
-                                              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                                <Headphones className="w-6 h-6" />
-                                              </div>
-                                              <div>
-                                                <p className="font-medium">Morning Finance Brief</p>
-                                                <p className="text-xs text-white/70">2 min • Today</p>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                                              <div className="flex-1 h-1 bg-white/20 rounded-full">
-                                                <div className="w-1/3 h-full bg-white rounded-full"></div>
-                                              </div>
-                                              <span className="text-xs">0:45</span>
-                                            </div>
-                                          </div>
-                                          <p className="text-sm text-slate-600 text-center">
-                                            "Your spending is 12% below target this week..."
-                                          </p>
-                                        </div>
-                                      )}
-
-                                      {option.id === "visual-dashboard" && (
-                                        <div className="space-y-3">
-                                          <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-green-50 rounded-xl p-3 text-center">
-                                              <div className="text-lg font-bold text-green-700">+CHF 127</div>
-                                              <div className="text-xs text-green-600">This week</div>
-                                            </div>
-                                            <div className="bg-blue-50 rounded-xl p-3 text-center">
-                                              <div className="text-lg font-bold text-blue-700">73%</div>
-                                              <div className="text-xs text-blue-600">Budget left</div>
-                                            </div>
-                                          </div>
-                                          <div className="bg-slate-100 rounded-xl p-3">
-                                            <div className="flex justify-between items-center mb-2">
-                                              <span className="text-xs text-slate-600">Japan Fund</span>
-                                              <span className="text-xs font-medium">CHF 1,240</span>
-                                            </div>
-                                            <div className="w-full h-2 bg-slate-200 rounded-full">
-                                              <div className="w-3/5 h-full bg-slate-700 rounded-full"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {option.id === "quick-notification" && (
-                                        <div className="space-y-3">
-                                          <div className="bg-slate-900 rounded-2xl p-4 text-white text-left">
-                                            <div className="flex items-start gap-3">
-                                              <Bell className="w-5 h-5 mt-0.5" />
-                                              <div>
-                                                <p className="font-medium text-sm">Finance Guardian</p>
-                                                <p className="text-xs text-white/70 mt-1">
-                                                  You're CHF 45 under budget today. Great job! 🎯
-                                                </p>
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <div className="bg-blue-50 rounded-xl p-3 text-left">
-                                            <div className="flex items-start gap-3">
-                                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                                              <div>
-                                                <p className="text-sm font-medium text-blue-900">Weekly Summary</p>
-                                                <p className="text-xs text-blue-700">Tap to view your progress</p>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {option.id === "voice-summary" && (
-                                        <div className="space-y-4">
-                                          <div className="bg-slate-100 rounded-2xl p-4 text-center">
-                                            <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                                              <Volume2 className="w-8 h-8 text-white" />
-                                            </div>
-                                            <div className="flex justify-center gap-1 mb-2">
-                                              {[...Array(5)].map((_, i) => (
-                                                <motion.div
-                                                  key={i}
-                                                  className="w-1 bg-slate-400 rounded-full"
-                                                  animate={{ height: [8, 16, 8] }}
-                                                  transition={{
-                                                    duration: 1,
-                                                    repeat: Number.POSITIVE_INFINITY,
-                                                    delay: i * 0.1,
-                                                  }}
-                                                />
-                                              ))}
-                                            </div>
-                                            <p className="text-xs text-slate-600">
-                                              "Good morning Alex, your finances are looking healthy..."
-                                            </p>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              )
-                            })}
-                          </AnimatePresence>
-
-                          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2">
-                            {dailyOptions.map((option, index) => (
-                              <motion.button
-                                key={option.id}
-                                className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentCarouselIndex ? "bg-slate-900 w-6" : "bg-slate-300"
-                                  }`}
-                                onClick={() => {
-                                  setCurrentCarouselIndex(index)
-                                  handleDailySelect(option.id)
-                                }}
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
-                              />
-                            ))}
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="space-y-6"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.2 }}
-                    >
-                      <div className="text-center">
-                        <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-8 font-[Satoshi]">
-                          Wochenrückblick
-                        </h3>
-                        <div className="space-y-3">
-                          {weeklyOptions.map((option, index) => {
-                            const IconComponent = option.icon
-                            return (
-                              <motion.div
-                                key={option.id}
-                                className={`relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${selectedWeekly === option.id
-                                  ? "bg-slate-900 border-slate-900 text-white shadow-2xl shadow-slate-900/25"
-                                  : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-lg shadow-sm text-slate-900"
-                                  }`}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{
-                                  delay: 1.3 + index * 0.1,
-                                  duration: 0.4,
-                                  ease: [0.25, 0.1, 0.25, 1],
-                                }}
-                                whileHover={{ scale: 1.01, y: -1 }}
-                                whileTap={{ scale: 0.99 }}
-                                onClick={() => handleWeeklySelect(option.id)}
-                                style={{
-                                  boxShadow:
-                                    selectedWeekly === option.id
-                                      ? "0 20px 25px -5px rgba(15, 23, 42, 0.25), 0 10px 10px -5px rgba(15, 23, 42, 0.1)"
-                                      : "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                                }}
-                              >
-                                <div className="flex items-center gap-4">
-                                  <motion.div
-                                    animate={selectedWeekly === option.id ? { scale: [1, 1.1, 1] } : {}}
-                                    transition={{ duration: 0.4 }}
-                                  >
-                                    <IconComponent
-                                      className={`w-5 h-5 ${selectedWeekly === option.id ? "text-white" : "text-slate-600"
-                                        }`}
-                                    />
-                                  </motion.div>
-                                  <p
-                                    className={`text-sm font-medium flex-1 text-left ${selectedWeekly === option.id ? "text-white" : "text-slate-900"
-                                      }`}
-                                  >
-                                    {option.label}
-                                  </p>
-                                  <motion.div
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${selectedWeekly === option.id ? "bg-white" : "bg-slate-300"
-                                      }`}
-                                    animate={selectedWeekly === option.id ? { scale: [1, 1.3, 1] } : {}}
-                                    transition={{ duration: 0.4 }}
-                                  />
-                                </div>
-                              </motion.div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                ) : currentStep === 3 ? (
-                  <motion.div
                     className="space-y-8 mt-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -958,7 +707,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     >
                       {budgetOptions.map((option, index) => {
                         const IconComponent = option.icon
-                        const isSelected = selectedBudget === option.id
+                        const isSelected = selectedBudgetOption === option.id
 
                         return (
                           <motion.div
