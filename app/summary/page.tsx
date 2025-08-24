@@ -21,8 +21,16 @@ import { useVoice } from "@/contexts/VoiceContext";
 import VoiceMode from "@/components/VoiceMode";
 import DetailedViewOverlay from "@/components/DetailedViewOverlay";
 import WeeklyReview from "@/components/WeeklyReview";
+import { Chart } from "@/components/Chart";
 
-
+interface ChartConfig {
+  type: 'bar' | 'line' | 'pie' | 'area'
+  data: Array<{ name: string; value: number; [key: string]: any }>
+  title: string
+  xAxisLabel?: string
+  yAxisLabel?: string
+  colors?: string[]
+}
 
 interface ChatMessage {
   id: string;
@@ -30,6 +38,7 @@ interface ChatMessage {
   sender: "user" | "other";
   timestamp: Date;
   budgetWidget?: any; // Optional budget widget data
+  chartData?: ChartConfig; // Optional chart data
 }
 
 export default function Summary() {
@@ -60,17 +69,27 @@ export default function Summary() {
           content: `Du bist ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
 
 1. Monatliche Budget-Widgets generieren, wenn Benutzer nach ihrem Budgetstatus, verbleibendem Geld oder Ausgaben fragen
-2. Zinseszins für Investitionsplanung berechnen
-3. Monatliche Zahlungen für Kredite und Hypotheken berechnen
-4. Persönliche Finanzberatung anbieten
+2. Interaktive Diagramme und Charts für Finanzvisualisierungen erstellen (Balken-, Linien-, Kreis- und Flächendiagramme)
+3. Zinseszins für Investitionsplanung berechnen
+4. Monatliche Zahlungen für Kredite und Hypotheken berechnen
+5. Persönliche Finanzberatung anbieten
 
-WICHTIG: Halte deine Antworten prägnant und fokussiert. Wenn Benutzer nach Budgets, Ausgaben oder Finanzstatus fragen:
-- Verwende das generateMonthlyBudgetWidget-Tool, um die Daten visuell anzuzeigen
+WICHTIG: Halte deine Antworten prägnant und fokussiert. 
+
+Für Budgets und Ausgabenstatus:
+- Verwende das generateMonthlyBudgetWidget-Tool für detaillierte Budgetübersichten
 - Gib NUR eine kurze, relevante Antwort (max. 1-2 Sätze)
-- Wiederhole NICHT alle Zahlen oder Details im Text, da das Widget sie anzeigt
-- Konzentriere dich auf Erkenntnisse, nicht auf Datenwiederholung
 
-Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit auf Kurs mit 65% deines verbrauchten Budgets."`
+Für Diagramme und Visualisierungen:
+- Verwende das generateChartData-Tool für alle Arten von Finanzdiagrammen
+- Erstelle Charts für Ausgabentrends, Einkommensentwicklung, Kategorienverteilung, etc.
+- Wähle den passenden Diagrammtyp: Balken für Vergleiche, Linien für Trends, Kreise für Anteile, Flächen für Entwicklungen
+- Verwende deutsche Beschriftungen und CHF als Währung
+
+Beispiele:
+- "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit auf Kurs mit 65% deines verbrauchten Budgets."
+- "Hier siehst du deine Ausgabenentwicklung der letzten Monate als Diagramm."
+- "Diese Kreisdiagramm zeigt deine Ausgabenverteilung nach Kategorien."`
         },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -112,6 +131,89 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
               return; // Exit early since we've handled the response
             } catch (error) {
               console.error('Error parsing tool arguments:', error);
+            }
+          }
+          
+          if (toolCall.function.name === 'generateChartData') {
+            try {
+              const args = JSON.parse(toolCall.function.arguments);
+              
+              // Call the chart generation API directly
+              const chartResponse = await fetch('/api/openai-tools', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  messages: [{
+                    role: 'user',
+                    content: 'Generate chart data'
+                  }],
+                  tools: [{
+                    type: "function",
+                    function: {
+                      name: "generateChartData",
+                      description: "Generate chart data",
+                      parameters: {
+                        type: "object",
+                        properties: {
+                          chartType: { type: "string" },
+                          dataType: { type: "string" },
+                          timeframe: { type: "string" },
+                          title: { type: "string" },
+                          xAxisLabel: { type: "string" },
+                          yAxisLabel: { type: "string" }
+                        },
+                        required: ["chartType", "dataType"]
+                      }
+                    }
+                  }],
+                  tool_choice: { type: "function", function: { name: "generateChartData" } },
+                  directToolCall: {
+                    name: "generateChartData",
+                    arguments: JSON.stringify(args)
+                  }
+                })
+              });
+              
+              if (chartResponse.ok) {
+                const chartData = await chartResponse.json();
+                console.log('Chart API Response:', chartData);
+                
+                // Extract chart config from the response
+                let chartConfig: ChartConfig | null = null;
+                
+                if (chartData.directToolResult && chartData.directToolResult.success) {
+                  chartConfig = chartData.directToolResult.chartConfig;
+                } else if (chartData.choices?.[0]?.message?.tool_calls?.[0]?.function?.result) {
+                  const result = chartData.choices[0].message.tool_calls[0].function.result;
+                  if (result.success) {
+                    chartConfig = result.chartConfig;
+                  }
+                }
+                
+                if (chartConfig) {
+                  // Add the AI response
+                  pushOtherMessage(response.message.content || "Hier ist dein Diagramm:");
+                  
+                  // Add a separate message with the chart
+                  const chartMessage: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    content: chartConfig.title || "Finanzdiagramm",
+                    sender: "other",
+                    timestamp: new Date(),
+                    chartData: chartConfig
+                  };
+                  setMessages(prev => [...prev, chartMessage]);
+                  return; // Exit early since we've handled the response
+                } else {
+                  console.error('Failed to extract chart config from response');
+                }
+              } else {
+                console.error('Chart API request failed:', chartResponse.status);
+              }
+            } catch (error) {
+              console.error('Error processing chart tool call:', error);
             }
           }
         }
@@ -266,6 +368,20 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
                       />
                     </div>
                   )}
+                  {message.chartData && (
+                    <div className="mt-2">
+                      <Chart
+                        type={message.chartData.type}
+                        data={message.chartData.data}
+                        title={message.chartData.title}
+                        xAxisLabel={message.chartData.xAxisLabel}
+                        yAxisLabel={message.chartData.yAxisLabel}
+                        colors={message.chartData.colors}
+                        height={300}
+                        className="bg-slate-50 border-slate-200"
+                      />
+                    </div>
+                  )}
                   <div
                     className={`text-xs mt-2 opacity-60 ${message.sender === "user"
                       ? "text-slate-200"
@@ -339,26 +455,29 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
               Häufige Fragen
             </h3>
             <div className="space-y-2">
-              {[
-                { icon: BarChart3, text: "Wie viel Geld habe ich diesen Monat noch übrig?" },
-                { icon: Coffee, text: "Zeig mir meine monatliche Budgetübersicht" },
-                { icon: BarChart3, text: "Bin ich mit meinem Budget auf Kurs?" },
-                { icon: Home, text: "Wie ist mein Ausgabenstatus?" },
-                { icon: CreditCard, text: "Wie viel habe ich bisher ausgegeben?" },
-              ].map((suggestion, index) => (
-                <button
-                  key={index}
-                  className="w-full text-left p-3 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 text-sm transition-colors"
-                  onClick={() => handleSuggestionClick(suggestion.text)}
-                >
-                  <div className="flex items-center gap-3">
-                    <suggestion.icon className="h-4 w-4 text-slate-500" />
-                    <span className="text-slate-700">
-                      {suggestion.text}
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {
+                [
+                  { icon: BarChart3, text: "Wie viel Geld habe ich diesen Monat noch übrig?" },
+                  { icon: Coffee, text: "Zeig mir meine monatliche Budgetübersicht" },
+                  { icon: BarChart3, text: "Zeig mir ein Diagramm meiner Ausgaben" },
+                  { icon: BarChart3, text: "Erstelle ein Kreisdiagramm meiner Ausgabenkategorien" },
+                  { icon: BarChart3, text: "Zeig mir meine Sparentwicklung als Liniendiagramm" },
+                  { icon: Home, text: "Wie ist mein Ausgabenstatus?" },
+                  { icon: CreditCard, text: "Wie viel habe ich bisher ausgegeben?" },
+                ].map((suggestion, index) => (
+                  <button
+                    key={index}
+                    className="w-full text-left p-3 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 text-sm transition-colors"
+                    onClick={() => handleSuggestionClick(suggestion.text)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <suggestion.icon className="h-4 w-4 text-slate-500" />
+                      <span className="text-slate-700">
+                        {suggestion.text}
+                      </span>
+                    </div>
+                  </button>
+                ))}
             </div>
           </div>
         )}
