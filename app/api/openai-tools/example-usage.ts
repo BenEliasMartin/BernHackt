@@ -46,6 +46,102 @@ export async function callOpenAIWithTools(
         messages,
         model,
         maxTokens: 1000,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "generateMonthlyBudgetWidget",
+              description: "Generate a monthly budget widget with spending categories and progress tracking",
+              parameters: {
+                type: "object",
+                properties: {
+                  month: { type: "string", description: "Month name (e.g., 'January', 'February')" },
+                  year: { type: "number", description: "Year (e.g., 2024)" },
+                  totalBudget: { type: "number", description: "Total monthly budget amount" },
+                  totalSpent: { type: "number", description: "Total amount spent so far this month" },
+                  categories: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Category name (e.g., 'Food', 'Transportation')" },
+                        allocated: { type: "number", description: "Budget allocated for this category" },
+                        spent: { type: "number", description: "Amount spent in this category" },
+                        color: { type: "string", description: "CSS color class for the progress bar" }
+                      },
+                      required: ["name", "allocated", "spent", "color"]
+                    }
+                  },
+                  savingsGoal: { type: "number", description: "Monthly savings goal amount (optional)" },
+                  savingsCurrent: { type: "number", description: "Current savings amount for this month (optional)" }
+                },
+                required: ["month", "year", "totalBudget", "totalSpent", "categories"]
+              }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "generateChartData",
+              description: "Generate chart data and configuration for financial visualizations including expenses, income, savings, and budget analysis",
+              parameters: {
+                type: "object",
+                properties: {
+                  chartType: {
+                    type: "string",
+                    enum: ["bar", "line", "pie", "area"],
+                    description: "Type of chart to generate"
+                  },
+                  dataType: {
+                    type: "string",
+                    enum: ["expenses", "income", "budget", "savings", "categories", "trends", "custom"],
+                    description: "Type of financial data to visualize"
+                  },
+                  timeframe: {
+                    type: "string",
+                    enum: ["week", "month", "quarter", "year"],
+                    description: "Time period for the data (optional)"
+                  },
+                  title: {
+                    type: "string",
+                    description: "Chart title (optional, will be auto-generated if not provided)"
+                  },
+                  xAxisLabel: {
+                    type: "string",
+                    description: "Label for X-axis (optional)"
+                  },
+                  yAxisLabel: {
+                    type: "string",
+                    description: "Label for Y-axis (optional, defaults to 'Amount (CHF)')"
+                  }
+                },
+                required: ["chartType", "dataType"]
+              }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "calculateCompoundInterest",
+              description: "Calculate compound interest for investment planning",
+              parameters: {
+                type: "object",
+                properties: {
+                  principal: { type: "number", description: "Initial investment amount" },
+                  rate: { type: "number", description: "Annual interest rate as a percentage (e.g., 7 for 7%)" },
+                  time: { type: "number", description: "Investment time period in years" },
+                  compoundFrequency: {
+                    type: "string",
+                    enum: ["annually", "semi-annually", "quarterly", "monthly", "daily"],
+                    description: "How often interest is compounded"
+                  }
+                },
+                required: ["principal", "rate", "time"]
+              }
+            }
+          }
+        ],
+        tool_choice: "auto"
       }),
     });
 

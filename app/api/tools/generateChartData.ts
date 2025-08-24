@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore'
 
 // Firebase configuration (using existing config)
 const firebaseConfig = {
@@ -15,6 +15,50 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
+
+// Interface for Firebase monthly summary data
+interface MonthlySummary {
+  id: string
+  startDate: any
+  endDate: any
+  totalIncome: number
+  totalSpent: number
+  netAmount: number
+  currency: string
+  periodType: string
+  spendingByCategory: Record<string, number>
+  topSpendingCategories: Array<{ category: string; amount: number }>
+  categoryChanges: {
+    totalSpentChange: number
+    totalSpentChangePercentage: number
+  }
+  comparisonWithPreviousPeriod: any
+  insights: string[]
+}
+
+// Function to fetch real user data from Firebase
+async function fetchUserSummaries(userId: string = 'test-user-123'): Promise<MonthlySummary[]> {
+  try {
+    console.log('📊 Fetching user summaries for:', userId)
+    
+    const userSummaryRef = doc(db, 'userSummaries', userId)
+    const userSummaryDoc = await getDoc(userSummaryRef)
+    
+    if (!userSummaryDoc.exists()) {
+      console.log('❌ No user summary document found')
+      return []
+    }
+    
+    const userData = userSummaryDoc.data()
+    const monthlySummaries = userData.monthlySummaries || []
+    
+    console.log('✅ Found', monthlySummaries.length, 'monthly summaries')
+    return monthlySummaries
+  } catch (error) {
+    console.error('❌ Error fetching user summaries:', error)
+    return []
+  }
+}
 
 export interface ChartDataRequest {
   chartType: 'bar' | 'line' | 'pie' | 'area'
@@ -41,8 +85,54 @@ export interface ChartDataResponse {
   error?: string
 }
 
-// Sample data generators for different scenarios
-const generateExpenseData = (timeframe: string = 'month'): Array<{ name: string; value: number }> => {
+// Firebase data generators using real user data
+const generateExpenseData = async (timeframe: string = 'month', userId?: string): Promise<Array<{ name: string; value: number }>> => {
+  try {
+    const summaries = await fetchUserSummaries(userId)
+    
+    if (summaries.length === 0) {
+      console.log('No summaries found, using fallback data')
+      return generateFallbackExpenseData(timeframe)
+    }
+    
+    // Sort summaries by date (newest first)
+    const sortedSummaries = summaries.sort((a, b) => {
+      const dateA = a.startDate?.toDate ? a.startDate.toDate() : new Date(a.startDate)
+      const dateB = b.startDate?.toDate ? b.startDate.toDate() : new Date(b.startDate)
+      return dateB.getTime() - dateA.getTime()
+    })
+    
+    switch (timeframe) {
+      case 'week':
+        // For weekly, show last 7 days (mock data since we have monthly summaries)
+        return generateFallbackExpenseData('week')
+      
+      case 'year':
+        // Group by year
+        const yearlyData: Record<string, number> = {}
+        sortedSummaries.forEach(summary => {
+          const date = summary.startDate?.toDate ? summary.startDate.toDate() : new Date(summary.startDate)
+          const year = date.getFullYear().toString()
+          yearlyData[year] = (yearlyData[year] || 0) + summary.totalSpent
+        })
+        return Object.entries(yearlyData).map(([year, value]) => ({ name: year, value }))
+      
+      default: // month
+        // Take last 6 months
+        return sortedSummaries.slice(0, 6).reverse().map(summary => {
+          const date = summary.startDate?.toDate ? summary.startDate.toDate() : new Date(summary.startDate)
+          const monthName = date.toLocaleDateString('de-DE', { month: 'short' })
+          return { name: monthName, value: summary.totalSpent }
+        })
+    }
+  } catch (error) {
+    console.error('Error generating expense data:', error)
+    return generateFallbackExpenseData(timeframe)
+  }
+}
+
+// Fallback data for when Firebase data is not available
+const generateFallbackExpenseData = (timeframe: string = 'month'): Array<{ name: string; value: number }> => {
   const monthlyExpenses = [
     { name: 'Jan', value: 2800 },
     { name: 'Feb', value: 2650 },
@@ -77,13 +167,74 @@ const generateExpenseData = (timeframe: string = 'month'): Array<{ name: string;
   }
 }
 
-const generateCategoryData = (): Array<{ name: string; value: number }> => [
+const generateCategoryData = async (userId?: string): Promise<Array<{ name: string; value: number }>> => {
+  try {
+    const summaries = await fetchUserSummaries(userId)
+    
+    if (summaries.length === 0) {
+      console.log('No summaries found, using fallback category data')
+      return generateFallbackCategoryData()
+    }
+    
+    // Get the most recent summary
+    const latestSummary = summaries.sort((a, b) => {
+      const dateA = a.startDate?.toDate ? a.startDate.toDate() : new Date(a.startDate)
+      const dateB = b.startDate?.toDate ? b.startDate.toDate() : new Date(b.startDate)
+      return dateB.getTime() - dateA.getTime()
+    })[0]
+    
+    if (latestSummary.spendingByCategory) {
+      return Object.entries(latestSummary.spendingByCategory)
+        .filter(([_, value]) => value > 0)
+        .map(([category, value]) => ({
+          name: translateCategory(category),
+          value: value as number
+        }))
+        .sort((a, b) => b.value - a.value)
+    }
+    
+    // Fallback to topSpendingCategories if spendingByCategory is not available
+    if (latestSummary.topSpendingCategories && latestSummary.topSpendingCategories.length > 0) {
+      return latestSummary.topSpendingCategories.map(cat => ({
+        name: translateCategory(cat.category),
+        value: cat.amount
+      }))
+    }
+    
+    return generateFallbackCategoryData()
+  } catch (error) {
+    console.error('Error generating category data:', error)
+    return generateFallbackCategoryData()
+  }
+}
+
+// Helper function to translate category names to German
+const translateCategory = (category: string): string => {
+  const translations: Record<string, string> = {
+    'dining': 'Restaurants',
+    'food': 'Lebensmittel',
+    'groceries': 'Lebensmittel',
+    'transport': 'Transport',
+    'transportation': 'Transport',
+    'entertainment': 'Unterhaltung',
+    'shopping': 'Shopping',
+    'utilities': 'Nebenkosten',
+    'health': 'Gesundheit',
+    'education': 'Bildung',
+    'travel': 'Reisen',
+    'other': 'Sonstiges'
+  }
+  
+  return translations[category.toLowerCase()] || category
+}
+
+const generateFallbackCategoryData = (): Array<{ name: string; value: number }> => [
   { name: 'Lebensmittel', value: 800 },
   { name: 'Transport', value: 350 },
   { name: 'Unterhaltung', value: 250 },
   { name: 'Shopping', value: 400 },
   { name: 'Restaurants', value: 300 },
-  { name: 'Utilities', value: 200 },
+  { name: 'Nebenkosten', value: 200 },
 ]
 
 const generateIncomeData = (timeframe: string = 'month'): Array<{ name: string; value: number }> => {
@@ -161,10 +312,10 @@ export async function generateChartData(request: ChartDataRequest): Promise<Char
       }))
       title = request.title || 'Custom Chart'
     } else {
-      // Generate data based on type
+      // Generate data based on type (now with async support)
       switch (request.dataType) {
         case 'expenses':
-          data = generateExpenseData(request.timeframe)
+          data = await generateExpenseData(request.timeframe, request.userId)
           title = request.title || `Ausgaben ${request.timeframe === 'week' ? '(Woche)' : request.timeframe === 'year' ? '(Jahr)' : '(Monat)'}`
           xAxisLabel = xAxisLabel || (request.timeframe === 'week' ? 'Tag' : request.timeframe === 'year' ? 'Jahr' : 'Monat')
           colors = ['#ef4444', '#dc2626', '#b91c1c']
@@ -185,7 +336,7 @@ export async function generateChartData(request: ChartDataRequest): Promise<Char
           break
 
         case 'categories':
-          data = generateCategoryData()
+          data = await generateCategoryData(request.userId)
           title = request.title || 'Ausgaben nach Kategorien'
           colors = ['#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95', '#3730a3']
           break
@@ -198,7 +349,7 @@ export async function generateChartData(request: ChartDataRequest): Promise<Char
 
         case 'trends':
           // Generate trend data based on timeframe
-          data = request.timeframe === 'week' ? generateSavingsData('week') : generateExpenseData(request.timeframe)
+          data = request.timeframe === 'week' ? generateSavingsData('week') : await generateExpenseData(request.timeframe, request.userId)
           title = request.title || 'Finanztrend'
           xAxisLabel = xAxisLabel || 'Zeitraum'
           colors = ['#8b5cf6']
