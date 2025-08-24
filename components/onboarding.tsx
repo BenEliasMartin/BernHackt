@@ -34,7 +34,7 @@ const ANIMATION_CONFIG = {
 
 const steps = [
   {
-    title: "Hallo Alex, ich bin Fin dein finanzieller Begleiter",
+    title: "Hallo Alex, ich bin Fin, dein finanzieller Begleiter",
     subtitle: "Einfach verfolgen • Intelligent sparen • Mehr erreichen",
     description: "",
   },
@@ -871,13 +871,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
               {!isLastStep && currentStep > 0 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-                  <Button
-                    variant="ghost"
+                  <button
                     onClick={handleSkip}
-                    className="w-full text-slate-500 hover:text-slate-700 hover:bg-slate-50 text-sm rounded-xl h-12 transition-all duration-200"
+                    className="w-full text-slate-500 hover:!text-slate-800 hover:!bg-slate-100 text-sm rounded-xl h-12 transition-all duration-200 border-0 bg-transparent cursor-pointer font-medium focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-opacity-50"
                   >
                     Jetzt überspringen
-                  </Button>
+                  </button>
                 </motion.div>
               )}
             </motion.div>
