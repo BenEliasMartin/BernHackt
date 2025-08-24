@@ -24,7 +24,7 @@ import { Chart } from "@/components/Chart";
 
 interface ChartConfig {
   type: 'bar' | 'line' | 'pie' | 'area'
-  data: Array<{ name: string; value: number; [key: string]: any }>
+  data: Array<{ name: string; value: number;[key: string]: any }>
   title: string
   xAxisLabel?: string
   yAxisLabel?: string
@@ -139,11 +139,11 @@ Antworte kurz und erstelle dann automatisch das passende Diagramm!`
               console.error('Error parsing tool arguments:', error);
             }
           }
-          
+
           if (toolCall.function.name === 'generateChartData') {
             try {
               const args = JSON.parse(toolCall.function.arguments);
-              
+
               // Call the chart generation API directly
               const chartResponse = await fetch('/api/openai-tools', {
                 method: 'POST',
@@ -181,14 +181,14 @@ Antworte kurz und erstelle dann automatisch das passende Diagramm!`
                   }
                 })
               });
-              
+
               if (chartResponse.ok) {
                 const chartData = await chartResponse.json();
                 console.log('Chart API Response:', chartData);
-                
+
                 // Extract chart config from the response
                 let chartConfig: ChartConfig | null = null;
-                
+
                 if (chartData.directToolResult && chartData.directToolResult.success) {
                   chartConfig = chartData.directToolResult.chartConfig;
                 } else if (chartData.choices?.[0]?.message?.tool_calls?.[0]?.function?.result) {
@@ -197,11 +197,11 @@ Antworte kurz und erstelle dann automatisch das passende Diagramm!`
                     chartConfig = result.chartConfig;
                   }
                 }
-                
+
                 if (chartConfig) {
                   // Add the AI response
                   pushOtherMessage(response.message.content || "Hier ist dein Diagramm:");
-                  
+
                   // Add a separate message with the chart
                   const chartMessage: ChatMessage = {
                     id: (Date.now() + 1).toString(),
@@ -406,7 +406,7 @@ Antworte kurz und erstelle dann automatisch das passende Diagramm!`
           </div>
 
           {/* Input Area */}
-          <div className="flex gap-3 py-4">
+          <div className="flex gap-3 py-2">
             <input
               type="text"
               value={input}

@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@splinetool/react-spline', '@splinetool/runtime'],
   },
+  devIndicators: {
+    buildActivity: false,
+  },
+
 };
 
 export default nextConfig;

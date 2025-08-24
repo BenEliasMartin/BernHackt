@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
             arguments: directToolCall.arguments
           }
         };
-        
+
         const result = await executeToolCall(mockToolCall);
         return NextResponse.json({
           directToolResult: result,
