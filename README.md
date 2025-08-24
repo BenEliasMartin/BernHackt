@@ -1,6 +1,6 @@
-# BernHackt - Financial AI Platform
+# Fin
 
-A comprehensive financial AI platform built with Next.js, featuring voice interaction, financial analysis, and AI-powered transaction prediction.
+Fin is a comprehensive financial AI platform, featuring voice interaction, financial analysis, and AI-powered transaction prediction.
 
 ## Features
 
@@ -17,7 +17,7 @@ The platform includes a sophisticated TypeScript component for running inference
 
 ### Features
 
-- **Dual Model Support**: Choose between Fin-O Small (61MB) and Fin-O Large (298MB) models
+- **Dual Model Support**: Choose between Fin-O Small (61M) and Fin-O Large (298M) models
 - **Real-time Inference**: Run predictions directly in the browser using ONNX.js
 - **Interactive Dashboard**: User-friendly interface with model comparison and analytics
 - **TypeScript Integration**: Fully typed for better development experience
