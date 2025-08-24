@@ -224,7 +224,7 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
 
         {/* Content Area - Chat Box */}
         <div className="space-y-4">
-          <div className="h-[60vh] overflow-y-auto bg-slate-50 rounded-lg p-4 space-y-3">
+          <div className="h-[60vh] overflow-y-auto bg-white rounded-lg p-4 space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
