@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { generateChartDataTool } from "../tools/generateChartData";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -146,6 +147,60 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "generateChartData",
+      description: "Generate chart data and configuration for financial visualizations including expenses, income, savings, and budget analysis",
+      parameters: {
+        type: "object",
+        properties: {
+          chartType: {
+            type: "string",
+            enum: ["bar", "line", "pie", "area"],
+            description: "Type of chart to generate",
+          },
+          dataType: {
+            type: "string",
+            enum: ["expenses", "income", "budget", "savings", "categories", "trends", "custom"],
+            description: "Type of financial data to visualize",
+          },
+          timeframe: {
+            type: "string",
+            enum: ["week", "month", "quarter", "year"],
+            description: "Time period for the data (optional)",
+          },
+          customLabels: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Custom labels for chart data points (required when dataType is 'custom')",
+          },
+          customValues: {
+            type: "array",
+            items: {
+              type: "number",
+            },
+            description: "Custom values for chart data points (required when dataType is 'custom')",
+          },
+          title: {
+            type: "string",
+            description: "Chart title (optional, will be auto-generated if not provided)",
+          },
+          xAxisLabel: {
+            type: "string",
+            description: "Label for X-axis (optional)",
+          },
+          yAxisLabel: {
+            type: "string",
+            description: "Label for Y-axis (optional, defaults to 'Amount (CHF)')",
+          },
+        },
+        required: ["chartType", "dataType"],
+      },
+    },
+  },
 ];
 
 // Function to execute tool calls
@@ -183,6 +238,17 @@ async function executeToolCall(
       case "get_weather_data":
         // Placeholder for weather data function
         return { location: parsedArgs.location, units: parsedArgs.units, temperature: "22°C", condition: "Sunny" };
+      case "generateChartData":
+        return await generateChartDataTool(
+          parsedArgs.chartType,
+          parsedArgs.dataType,
+          parsedArgs.timeframe,
+          parsedArgs.customLabels,
+          parsedArgs.customValues,
+          parsedArgs.title,
+          parsedArgs.xAxisLabel,
+          parsedArgs.yAxisLabel
+        );
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -289,6 +355,7 @@ export async function POST(request: NextRequest) {
       messages,
       model = "gpt-5-mini",
       maxTokens = 1000,
+      directToolCall,
     } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -296,6 +363,32 @@ export async function POST(request: NextRequest) {
         { error: "Messages array is required" },
         { status: 400 }
       );
+    }
+
+    // Handle direct tool calls (bypass OpenAI)
+    if (directToolCall && directToolCall.name && directToolCall.arguments) {
+      try {
+        const mockToolCall = {
+          id: 'direct-call-' + Date.now(),
+          type: 'function' as const,
+          function: {
+            name: directToolCall.name,
+            arguments: directToolCall.arguments
+          }
+        };
+        
+        const result = await executeToolCall(mockToolCall);
+        return NextResponse.json({
+          directToolResult: result,
+          message: { content: 'Direct tool call executed' },
+        });
+      } catch (error) {
+        console.error('Direct tool call error:', error);
+        return NextResponse.json(
+          { error: 'Direct tool call failed', details: error instanceof Error ? error.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
     }
 
     // Make initial request to OpenAI with tools
