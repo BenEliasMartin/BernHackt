@@ -410,7 +410,7 @@ Beispiel für eine gute Antwort:
           </div>
 
           {/* Input Area */}
-          <div className="flex gap-3 py-2">
+          <div className="flex gap-3 pt-0 pb-2">
             <input
               type="text"
               value={input}
