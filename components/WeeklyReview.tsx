@@ -72,7 +72,7 @@ const BlurFadeIn = ({ text, className = "", delay = 0, duration = 0.8 }: BlurFad
 
 // Financial data mock (in real app, this would come from props/API)
 const weeklyData = {
-    period: "15. - 21. Januar 2025",
+    period: "18. - 24. August 2025",
     totalSpent: 486.50,
     budgetUsed: 67,
     savingsGoal: {
@@ -88,11 +88,11 @@ const weeklyData = {
     achievements: [
         { title: "Sparmeister", description: "Unter Budget geblieben", icon: Award },
         { title: "Ziel-Verfolger", description: "Japan-Fund aufgestockt", icon: Target },
-        { title: "Ausgaben-Held", description: "Nur 3x auswärts gegessen", icon: Star }
+        { title: "Ausgaben-Held", description: "Nur dreimal auswärts gegessen", icon: Star }
     ],
     challenges: [
-        { title: "Coffee Challenge", description: "5 Tage ohne Starbucks", progress: 71, reward: "CHF 15 gespart" },
-        { title: "Transport Challenge", description: "3x zu Fuß gegangen", progress: 100, reward: "CHF 8 gespart" }
+        { title: "Coffee Challenge", description: "fünf Tage ohne Starbucks", progress: 71, reward: "fünfzehn Franken gespart" },
+        { title: "Transport Challenge", description: "dreimal zu Fuß gegangen", progress: 100, reward: "acht Franken gespart" }
     ]
 };
 
@@ -101,6 +101,10 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
     const [isIframeLoaded, setIsIframeLoaded] = useState(false);
     const [showContent, setShowContent] = useState(false);
 
+    // ElevenLabs TTS
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
     const sections = [
         "intro",
         "spending",
@@ -108,6 +112,16 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
         "achievements",
         "challenges",
         "nextWeek"
+    ];
+
+    // Narration texts for each section - Much more engaging and story-like with spoken numbers
+    const narrationTexts = [
+        "Na, da bist du ja wieder! Zeit für deine wöchentliche Finanz-Folter... äh, ich meine Expedition! Lass uns mal schauen, was du diese Woche wieder angestellt hast.",
+        `Oh Mann, oh Mann! Du hast diese Woche wieder ordentlich auf den Putz gehauen mit sage und schreibe vierhundertsechsundachtzig Franken und fünfzig Rappen! Aber hey, immerhin bist du nur bei siebenundsechzig Prozent deines Budgets - das ist ja fast schon sparsam für dich!`,
+        "Jetzt wird es interessant! Dein Japan-Fund wächst tatsächlich. Wer hätte das gedacht? Du fügst jede Woche ein paar Franken hinzu, und langsam aber sicher kommst du deinem Traumziel näher. Nicht schlecht, nicht schlecht!",
+        "Zeit für eine kleine Siegesfeier! Diese Woche warst du tatsächlich ein Finanz-Champion. Du hast nicht nur gespart, sondern auch bewiesen, dass du deine Ziele im Griff hast. Das ist ja mal eine Überraschung!",
+        "Und hier kommt der Höhepunkt! Deine Challenges laufen überraschenderweise wie ein gut geölter Motor. Du bleibst motiviert und sparst dabei auch noch echtes Geld. Wer hätte das von dir erwartet?",
+        "Das war ja mal eine Reise voller Überraschungen! Du bist bereit für die nächste Woche, und weißt was? Jeder Fortschritt bringt dich Japan ein Stück näher. Du baust dir deine Zukunft, eine Woche nach der anderen - auch wenn es manchmal langsam vorangeht!"
     ];
 
     useEffect(() => {
@@ -122,18 +136,76 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
         }
     }, [isVisible]);
 
-    // Auto-advance sections
+    // Auto-advance sections - now waits for narration to finish
     useEffect(() => {
         if (!showContent || !isVisible) return;
 
-        const timer = setTimeout(() => {
-            if (currentSection < sections.length - 1) {
-                setCurrentSection(prev => prev + 1);
+        // Start narration for current section only once
+        const narrationTimer = setTimeout(() => {
+            if (!isPlaying) { // Only start if not already playing
+                speakWithElevenLabs(narrationTexts[currentSection]);
             }
-        }, 4000); // 4 seconds per section
+        }, 500);
 
-        return () => clearTimeout(timer);
-    }, [currentSection, showContent, isVisible]);
+        return () => clearTimeout(narrationTimer);
+    }, [currentSection, showContent, isVisible]); // Removed narrationTexts dependency
+
+    // ElevenLabs TTS function
+    const speakWithElevenLabs = async (text: string) => {
+        try {
+            const response = await fetch('/api/elevenlabs-tts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    voice_id: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM', // German voice
+                    model_id: 'eleven_multilingual_v2' // Use multilingual model for German
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate speech');
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            if (audioRef.current) {
+                audioRef.current.src = audioUrl;
+                audioRef.current.play();
+                setIsPlaying(true);
+            }
+        } catch (error) {
+            console.error('ElevenLabs TTS error:', error);
+            console.error('Error details:', {
+                text: text,
+                voice_id: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM',
+                model_id: 'eleven_multilingual_v2'
+            });
+        }
+    };
+
+    // Function to advance to next section when audio finishes
+    const advanceToNextSection = () => {
+        if (currentSection < sections.length - 1) {
+            setCurrentSection(prev => prev + 1);
+        } else {
+            onClose();
+        }
+    };
+
+    // Cleanup audio URL on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current && audioRef.current.src) {
+                URL.revokeObjectURL(audioRef.current.src);
+            }
+        };
+    }, []);
+
+
 
     const nextSection = () => {
         if (currentSection < sections.length - 1) {
@@ -178,15 +250,26 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                         {sections.map((_, index) => (
                             <motion.div
                                 key={index}
-                                className={`h-1 rounded-full transition-all duration-500 ${index === currentSection
+                                className={`h-1 rounded-full transition-all duration-500 cursor-pointer ${index === currentSection
                                     ? "bg-white w-8"
                                     : index < currentSection
                                         ? "bg-white/60 w-6"
                                         : "bg-white/30 w-4"
                                     }`}
                                 onClick={() => setCurrentSection(index)}
+                                title={`Phase ${index + 1}: ${sections[index]}`}
                             />
                         ))}
+                    </motion.div>
+
+                    {/* Narration Progress Indicator */}
+                    <motion.div
+                        className="absolute top-32 left-1/2 transform -translate-x-1/2 text-white/80 text-sm font-satoshi z-20"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.5 }}
+                    >
+                        {isPlaying ? "🎙️ Erzählung läuft..." : "⏸️ Warte auf Erzählung..."}
                     </motion.div>
 
                     {/* Skip Button */}
@@ -236,6 +319,24 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                                 </div>
                             )}
                         </div>
+
+                        {/* Hidden audio element for TTS */}
+                        <audio
+                            ref={audioRef}
+                            onEnded={() => {
+                                setIsPlaying(false);
+                                // Advance to next section when audio finishes
+                                advanceToNextSection();
+                            }}
+                            onError={() => {
+                                setIsPlaying(false);
+                                console.error('Audio playback error, advancing to next section');
+                                advanceToNextSection();
+                            }}
+                            onLoadStart={() => setIsPlaying(true)}
+                            onCanPlay={() => setIsPlaying(true)}
+                            style={{ display: 'none' }}
+                        />
                     </motion.div>
 
                     {/* Main Content */}
@@ -286,7 +387,7 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                                                 transition={{ delay: 0.8, type: "spring" }}
                                                 className="text-5xl font-bold text-white font-satoshi"
                                             >
-                                                CHF {weeklyData.totalSpent}
+                                                {weeklyData.totalSpent} Franken
                                             </motion.div>
                                             <BlurFadeIn
                                                 text="ausgegeben"
@@ -323,8 +424,8 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                                                 transition={{ delay: 0.6, duration: 0.8 }}
                                             >
                                                 <div className="flex justify-between items-center mb-4">
-                                                    <span className="text-white/80 font-satoshi">CHF {weeklyData.savingsGoal.current}</span>
-                                                    <span className="text-white/80 font-satoshi">CHF {weeklyData.savingsGoal.target}</span>
+                                                    <span className="text-white/80 font-satoshi">{weeklyData.savingsGoal.current} Franken</span>
+                                                    <span className="text-white/80 font-satoshi">{weeklyData.savingsGoal.target} Franken</span>
                                                 </div>
                                                 <motion.div
                                                     className="w-full h-3 bg-white/20 rounded-full mb-4"
@@ -340,7 +441,7 @@ export default function WeeklyReview({ isVisible, onClose }: WeeklyReviewProps) 
                                                     />
                                                 </motion.div>
                                                 <BlurFadeIn
-                                                    text={`+CHF ${weeklyData.savingsGoal.weeklyProgress} diese Woche`}
+                                                    text={`+${weeklyData.savingsGoal.weeklyProgress} Franken diese Woche`}
                                                     className="text-green-300 font-semibold font-satoshi"
                                                     delay={2}
                                                 />

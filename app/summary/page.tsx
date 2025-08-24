@@ -15,7 +15,6 @@ import {
   Mic,
   Calendar,
 } from "lucide-react";
-import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceOutput } from "@/components/VoiceOutput";
 import { useVoice } from "@/contexts/VoiceContext";
 import VoiceMode from "@/components/VoiceMode";
@@ -284,7 +283,7 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
           </div>
 
           {/* Input Area */}
-          <div className="flex gap-2">
+          <div className="flex gap-3 py-4">
             <input
               type="text"
               value={input}
@@ -296,27 +295,10 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
               }}
               placeholder={isProcessing ? "KI denkt nach..." : "Schreibe deine Nachricht..."}
               disabled={isProcessing}
-              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-5 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
 
-            {/* Voice Input Button */}
-            {isVoiceEnabled && voiceService ? (
-              <VoiceInput
-                onTranscriptionComplete={(text) => {
-                  console.log('Voice transcription received:', text);
-                  processUserMessage(text);
-                }}
-                onError={(error) => {
-                  console.error('Voice input error:', error);
-                }}
-                voiceService={voiceService}
-                disabled={isProcessing}
-              />
-            ) : (
-              <div className="text-xs text-slate-500 p-2">
-                Voice: {voiceError || 'Loading...'}
-              </div>
-            )}
+
 
             <button
               onClick={() => {
@@ -325,7 +307,7 @@ Beispiel: "Hier ist deine Budgetübersicht für diesen Monat. Du bist derzeit au
                 }
               }}
               disabled={isProcessing}
-              className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-5 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessing ? "Verarbeite..." : <SendHorizonal />}
             </button>
