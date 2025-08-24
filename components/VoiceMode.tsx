@@ -52,46 +52,42 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         }
     }
 
-    // --- TTS (no UI, fully automatic) ---
+    // --- TTS (ElevenLabs integration) ---
     const speak = async (text: string) => {
-        if (!("speechSynthesis" in window)) {
-            onSpeakEnd();
-            return;
-        }
+        try {
+            const response = await fetch('/api/elevenlabs-tts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    voice_id: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM',
+                    model_id: 'eleven_multilingual_v2'
+                }),
+            });
 
-        await unlockAudio();
+            if (!response.ok) {
+                throw new Error('Failed to generate speech');
+            }
 
-        // Wait for voices (Safari/Chrome async quirk)
-        await new Promise<void>((resolve) => {
-            const synth = window.speechSynthesis;
-            const voices = synth.getVoices();
-            if (voices && voices.length) return resolve();
-            const id = setTimeout(resolve, 250);
-            (window as any).speechSynthesis.onvoiceschanged = () => {
-                clearTimeout(id);
-                resolve();
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            // Create temporary audio element for playback
+            const tempAudio = new Audio(audioUrl);
+            tempAudio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                onSpeakEnd();
             };
-        });
+            tempAudio.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                onSpeakEnd();
+            };
 
-        try {
-            window.speechSynthesis.cancel();
-        } catch { }
-
-        const u = new SpeechSynthesisUtterance(text);
-        // Prefer German voice if available; otherwise system default
-        const voices = window.speechSynthesis.getVoices();
-        const deVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("de"));
-        if (deVoice) u.voice = deVoice;
-        u.lang = deVoice?.lang || "de-DE";
-        u.rate = 1;
-        u.pitch = 1;
-
-        u.onend = () => onSpeakEnd();
-        u.onerror = () => onSpeakEnd();
-
-        try {
-            window.speechSynthesis.speak(u);
-        } catch {
+            tempAudio.play();
+        } catch (error) {
+            console.error('ElevenLabs TTS error:', error);
             onSpeakEnd();
         }
     };
@@ -239,13 +235,13 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1, duration: ANIMATION_CONFIG.duration.medium }}
                             >
-                                <h1 className="text-2xl font-extralight text-gray-900 tracking-tight font-satoshi">Voice Mode</h1>
+                                <h1 className="text-2xl font-extralight text-gray-900 tracking-tight font-satoshi">Voice Modus</h1>
                                 <motion.button
                                     onClick={() => {
                                         stopAll();
                                         onToggle();
                                     }}
-                                    className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-black"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
@@ -293,7 +289,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
 
                             {/* Hidden voice input drives the loop */}
                             {isVoiceEnabled && voiceService ? (
-                                <>
+                                <div className="w-screen flex justify-center items-center pr-12">
                                     {isListening && (
                                         <VoiceInput
                                             onTranscriptionComplete={handleVoiceInput}
@@ -302,10 +298,10 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                             disabled={false}
                                         />
                                     )}
-                                </>
+                                </div>
                             ) : (
                                 <div className="text-xs text-gray-500 text-center mt-4">
-                                    Voice unavailable{voiceError ? `: ${voiceError}` : ""}
+
                                 </div>
                             )}
 
@@ -317,10 +313,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 transition={{ delay: 0.3, duration: ANIMATION_CONFIG.duration.medium }}
                             >
                                 <div className="text-xs text-gray-500 text-center">
-                                    {phase === "idle" && "Idle — tap the orb or press SPACE"}
-                                    {phase === "listening" && "Listening... (speak now)"}
-                                    {phase === "thinking" && "Thinking..."}
-                                    {phase === "speaking" && "Speaking..."}
+
                                 </div>
                             </motion.div>
 
