@@ -42,7 +42,7 @@ const ANIMATION_CONFIG = {
 
 const steps = [
   {
-    title: "Hallo Alex, ich bin dein finanzieller Begleiter",
+    title: "Hallo Alex, ich bin Fin dein finanzieller Begleiter",
     subtitle: "Einfach verfolgen • Intelligent sparen • Mehr erreichen",
     description: "",
   },
