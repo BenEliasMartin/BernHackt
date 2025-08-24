@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import dynamic from "next/dynamic";
 import { useVoice } from "@/contexts/VoiceContext";
 import { VoiceInput } from "./VoiceInput";
 import { callOpenAIWithTools, OpenAIToolsResponse } from "@/app/api/openai-tools/example-usage";
-
-const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
 
 type Phase = "idle" | "listening" | "thinking" | "speaking";
 
@@ -27,6 +24,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
 
     const [phase, setPhase] = useState<Phase>("idle");
     const [aiResponse, setAiResponse] = useState("");
+    const [isIframeLoaded, setIsIframeLoaded] = useState(false);
     const cancelledRef = useRef(false);
 
     // --- Audio unlock (to bypass autoplay restrictions) ---
@@ -111,6 +109,11 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         setPhase("listening");
     };
 
+    // Reset iframe loading state
+    const resetIframe = () => {
+        setIsIframeLoaded(false);
+    };
+
     const stopAll = () => {
         cancelledRef.current = true;
         setAiResponse("");
@@ -126,6 +129,13 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
         else stopAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, isVoiceEnabled, voiceService]);
+
+    // Reset iframe when component becomes inactive
+    useEffect(() => {
+        if (!isActive) {
+            resetIframe();
+        }
+    }, [isActive]);
 
     // Spacebar toggles (and unlock audio on gesture)
     useEffect(() => {
@@ -211,7 +221,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                     : { scale: [1], boxShadow: ["0 0 0px rgba(0,0,0,0.1)"] };
 
     return (
-        <div>
+        <AnimatePresence>
             {isActive && (
                 <motion.div
                     className="fixed inset-0 z-50 bg-white"
@@ -229,7 +239,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1, duration: ANIMATION_CONFIG.duration.medium }}
                             >
-                                <h1 className="text-2xl font-extralight text-gray-900 tracking-tight">Voice Mode</h1>
+                                <h1 className="text-2xl font-extralight text-gray-900 tracking-tight font-satoshi">Voice Mode</h1>
                                 <motion.button
                                     onClick={() => {
                                         stopAll();
@@ -243,7 +253,7 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 </motion.button>
                             </motion.div>
 
-                            {/* Orb (Spline) */}
+                            {/* AI Voice Assistant */}
                             <div
                                 onClick={async () => {
                                     await unlockAudio(); // ensure gesture unlock
@@ -252,8 +262,33 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 }}
                                 role="button"
                                 aria-label={phase === "idle" ? "Start voice" : "Stop voice"}
+                                className="relative w-80 h-80 mx-auto"
                             >
-                                <Spline scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode" />
+                                {!isIframeLoaded && (
+                                    <motion.div
+                                        className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center"
+                                        animate={{ opacity: [0.5, 0.8, 0.5] }}
+                                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                                    >
+                                        <div className="text-sm text-slate-600 font-medium">Loading AI Assistant...</div>
+                                    </motion.div>
+                                )}
+
+                                {isActive && (
+                                    <div className="w-full h-full rounded-2xl overflow-hidden">
+                                        <iframe
+                                            src="https://my.spline.design/aivoiceassistant80s-XffkteQIC4MsraQHDQKep5Nc/"
+                                            frameBorder="0"
+                                            width="100%"
+                                            height="100%"
+                                            onLoad={() => setIsIframeLoaded(true)}
+                                            style={{
+                                                border: 'none',
+                                                borderRadius: '16px'
+                                            }}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Hidden voice input drives the loop */}
@@ -289,16 +324,18 @@ export default function VoiceMode({ isActive, onToggle }: VoiceModeProps) {
                                 </div>
                             </motion.div>
 
-                            {/* Invisible animated pulse for the orb */}
-                            <motion.div
-                                className="pointer-events-none fixed inset-0"
-                                animate={orbPulse}
-                                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                            />
+                            {/* Invisible animated pulse for the assistant - only when iframe is loaded */}
+                            {isIframeLoaded && (
+                                <motion.div
+                                    className="pointer-events-none fixed inset-0"
+                                    animate={orbPulse}
+                                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                                />
+                            )}
                         </div>
                     </div>
                 </motion.div>
             )}
-        </div>
+        </AnimatePresence>
     );
 }
