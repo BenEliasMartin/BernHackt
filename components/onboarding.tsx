@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -18,7 +18,7 @@ import {
   Utensils,
   ChevronLeft,
 } from "lucide-react"
-import Spline from "@splinetool/react-spline"
+// Removed Spline import - using iframe instead
 import { useVoice } from "@/contexts/VoiceContext"
 import { VoiceInput } from "./VoiceInput"
 
@@ -92,7 +92,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0)
   const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0)
 
-  const [isSplineLoaded, setIsSplineLoaded] = useState(false)
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
   const [activeLoadingStep, setActiveLoadingStep] = useState(-1)
   const [selectedScenario, setSelectedScenario] = useState<number | null>(null)
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -167,6 +167,15 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
     return () => clearTimeout(timer)
   }, [userFinancialData.currentQuestionIndex, transcribedText, userFinancialData.isInterviewComplete])
+
+  // Iframe load handler
+  useEffect(() => {
+    // Simulate iframe load after a short delay
+    const timer = setTimeout(() => {
+      setIsIframeLoaded(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [])
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -279,7 +288,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               className="flex justify-center relative"
               initial={{ scale: 0.8, opacity: 0, rotateY: -180 }}
               animate={{
-                scale: isSplineLoaded ? 1 : 0.9,
+                scale: isIframeLoaded ? 1 : 0.9,
                 opacity: 1,
                 rotateY: 0,
               }}
@@ -290,7 +299,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               }}
             >
               <div className="w-48 h-48 relative">
-                {!isSplineLoaded && (
+                {!isIframeLoaded && (
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full"
                     animate={{ opacity: [0.5, 0.8, 0.5] }}
@@ -298,10 +307,17 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   />
                 )}
 
-                <motion.div className="w-full h-full">
-                  <Spline
-                    scene="https://prod.spline.design/taUkTGq1sFMZ-Aem/scene.splinecode"
-                    onLoad={() => setIsSplineLoaded(true)}
+                <motion.div className="w-full h-full rounded-2xl overflow-hidden">
+                  <iframe
+                    src="https://my.spline.design/aivoiceassistant80s-XffkteQIC4MsraQHDQKep5Nc/"
+                    frameBorder="0"
+                    width="100%"
+                    height="100%"
+                    onLoad={() => setIsIframeLoaded(true)}
+                    style={{
+                      border: 'none',
+                      borderRadius: '16px'
+                    }}
                   />
                 </motion.div>
               </div>
