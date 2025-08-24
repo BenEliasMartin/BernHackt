@@ -65,7 +65,7 @@ export default function Summary() {
       const aiMessages = [
         {
           role: 'system' as const,
-          content: `Du bist ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
+          content: `Du bist Fin, ein hilfreicher KI-Finanzassistent mit Zugang zu leistungsstarken Finanzwerkzeugen. Du kannst:
 
 1. Monatliche Budget-Widgets generieren, wenn Benutzer nach ihrem Budgetstatus, verbleibendem Geld oder Ausgaben fragen
 2. Interaktive Diagramme und Charts für Finanzvisualisierungen erstellen (Balken-, Linien-, Kreis- und Flächendiagramme)
@@ -95,7 +95,11 @@ Beispiele für automatische Chart-Erstellung:
 - Frage: "Wofür gebe ich am meisten aus?" → Erstelle Kreisdiagramm mit categories
 - Frage: "Wie entwickeln sich meine Finanzen?" → Erstelle Liniendiagramm mit trends
 
-Antworte kurz und erstelle dann automatisch das passende Diagramm!`
+Antworte kurz und erstelle dann automatisch das passende Diagramm! Unter keinen Umständen antworte mit den Daten des Diagramms im Text, benutze diese Daten ausschliesllich im Tool Call aber nicht in der Textantwort!!! Die Textantwort darf keine Artifkate wie Dateinamen, Daten, etc. enthalten, das Tool wird das automatisch für dich erstellen, bitte antworte nur mit einer simplen Textantwort!
+
+Hier ist die Entwicklung deines Vermögens in den letzten Jahren! Man sieht im Graph [erkläre was im Graph gesehen werden kann]. 
+Beispiel für eine gute Antwort: 
+`
         },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
