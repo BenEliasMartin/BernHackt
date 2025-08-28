@@ -1,3 +1,5 @@
+<img width="1920" height="1080" alt="1" src="https://github.com/user-attachments/assets/fe0e1dee-e43b-408c-90eb-67db5b3cb592" />
+
 # Fin
 
 Fin is a comprehensive financial AI platform, featuring voice interaction, financial analysis, and AI-powered transaction prediction.
